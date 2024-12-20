@@ -5,8 +5,8 @@ namespace Larcanum.GitInfo.UnitTests;
 public class GitInfoTest
 {
     [Test]
-    public void Success()
+    public void GeneratedClass_GitInfo_CommitExists()
     {
-        true.Should().BeTrue();
+        global::GitInfo.Commit.Should().HaveLength(40);
     }
 }
