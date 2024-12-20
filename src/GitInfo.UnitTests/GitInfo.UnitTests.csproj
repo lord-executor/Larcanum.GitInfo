@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AssemblyName>Larcanum.GitInfo.UnitTests</AssemblyName>
+        <RootNamespace>Larcanum.GitInfo.UnitTests</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="TUnit" Version="0.5.18"/>
+        <PackageReference Include="FluentAssertions" Version="7.0.0" />
+    </ItemGroup>
+
+</Project>
