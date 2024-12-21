@@ -1,0 +1,12 @@
+﻿<Project>
+    <ItemGroup>
+        <CompilerVisibleProperty Include="GitInfoGenerateAssemblyVersion" />
+    </ItemGroup>
+
+    <PropertyGroup>
+        <GitInfoGenerateAssemblyVersion Condition="'$(GitInfoGenerateAssemblyVersion)' == ''">true</GitInfoGenerateAssemblyVersion>
+        <GenerateAssemblyVersionAttribute Condition="'$(GitInfoGenerateAssemblyVersion)' == 'true'">false</GenerateAssemblyVersionAttribute>
+        <GenerateAssemblyFileVersionAttribute Condition="'$(GitInfoGenerateAssemblyVersion)' == 'true'">false</GenerateAssemblyFileVersionAttribute>
+        <GenerateAssemblyInformationalVersionAttribute Condition="'$(GitInfoGenerateAssemblyVersion)' == 'true'">false</GenerateAssemblyInformationalVersionAttribute>
+    </PropertyGroup>
+</Project>

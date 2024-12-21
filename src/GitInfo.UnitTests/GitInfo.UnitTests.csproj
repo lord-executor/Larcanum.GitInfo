@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
+    
+    
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -7,6 +8,10 @@
         <AssemblyName>Larcanum.GitInfo.UnitTests</AssemblyName>
         <RootNamespace>Larcanum.GitInfo.UnitTests</RootNamespace>
     </PropertyGroup>
+    
+<!--    <PropertyGroup>-->
+<!--        <GitInfoGenerateAssemblyVersion>false</GitInfoGenerateAssemblyVersion>-->
+<!--    </PropertyGroup>-->
 
     <ItemGroup>
         <PackageReference Include="TUnit" Version="0.5.18"/>
@@ -16,5 +21,11 @@
     <ItemGroup>
       <ProjectReference Include="..\GitInfo\GitInfo.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
+
+    <!--
+        Automatic imports of package props and targets only works for NuGet package references - for project
+        references, we have to do this manually.
+    -->
+    <Import Project="../GitInfo/build/Larcanum.GitInfo.props" />
 
 </Project>

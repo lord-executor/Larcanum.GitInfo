@@ -8,11 +8,25 @@
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <RootNamespace>Larcanum.GitInfo</RootNamespace>
         <AssemblyName>Larcanum.GitInfo</AssemblyName>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+        <!-- Since we don't have an actual _lib_ folder, this warning shows up which we can (hopefully) ignore -->
+        <NoWarn>NU5128</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" PrivateAssets="all"/>
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- These lines pack the build props/targets files to the `build` folder in the generated package.
+         By convention, the .NET SDK will look for build\<Package Id>.props and build\<Package Id>.targets
+         for automatic inclusion in the build. -->
+        <Content Include="build\Larcanum.GitInfo.props" PackagePath="build\" />
     </ItemGroup>
 
     <ItemGroup>

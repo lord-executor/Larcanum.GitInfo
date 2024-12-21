@@ -13,9 +13,6 @@ namespace Larcanum.GitInfo
     {
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
-            var rootNs = context.AnalyzerConfigOptionsProvider.Select(static (options, cancellationToken) =>
-                options.GlobalOptions.TryGetValue("build_property.RootNamespace", out var rootNamespace) ? rootNamespace : null); // Default
-
             var config = context.AnalyzerConfigOptionsProvider.Select(static (options, cancellationToken) =>
             {
                 return new GitInfoConfig()
@@ -27,8 +24,17 @@ namespace Larcanum.GitInfo
                     ProjectDir = options.GlobalOptions.TryGetValue("build_property.ProjectDir", out var projectDir)
                         ? projectDir
                         : string.Empty,
+                    Test = options.GlobalOptions.TryGetValue("build_property.GitInfoGenerateAssemblyVersion", out var test) ? test : string.Empty,
+                    GitInfoGenerateAssemblyVersion = options.GlobalOptions.TryGetValue("build_property.GitInfoGenerateAssemblyVersion", out var generateAssemblyVersion) && bool.Parse(generateAssemblyVersion),
                 };
-            }); // Default
+            });
+
+            var test = context.AnalyzerConfigOptionsProvider.Select(static (options, cancellationToken) =>
+            {
+                return options.GlobalOptions.TryGetValue("gitinfo_something", out var test)
+                    ? test
+                    : string.Empty;
+            });
 
             // var emitLoggingPipeline = context.AdditionalTextsProvider
             //     .Combine(context.AnalyzerConfigOptionsProvider)
@@ -60,9 +66,20 @@ namespace Larcanum.GitInfo
                     Arguments = "rev-parse --short HEAD"
                 };
 
+                var sw = new StringWriter();
+                sw.WriteLine("// Generator Context");
+                sw.WriteLine($"// ProjectDir: {configValue.ProjectDir}");
+                sw.WriteLine($"// RootNamespace: {configValue.RootNamespace}");
+                sw.WriteLine($"// GitInfoGenerateAssemblyVersion: {configValue.GitInfoGenerateAssemblyVersion}");
+                sw.WriteLine($"// Test: {configValue}");
+                sw.WriteLine($"// Timestamp: {DateTime.Now:o}");
+
+
+
                 var git = new GitCommands(configValue.ProjectDir);
                 var values = new Dictionary<string, string>
                 {
+                    ["Context"] = sw.ToString(),
                     ["GitRoot"] = git.RepositoryRoot(),
                     ["GitIsDirty"] = git.IsDirty().ToString().ToLowerInvariant(),
                     ["GitBranch"] = git.BranchName(),
@@ -71,6 +88,15 @@ namespace Larcanum.GitInfo
                     ["GitCommitDate"] = git.CommitDate(),
                     ["GitTag"] = git.Tag(),
                 };
+
+                var versionAttributesWriter = new StringWriter();
+                if (configValue.GitInfoGenerateAssemblyVersion)
+                {
+                    versionAttributesWriter.WriteLine("[assembly: AssemblyVersion(\"1.2.4.8\")]");
+                    versionAttributesWriter.WriteLine("[assembly: AssemblyFileVersion(\"1.2.4.8\")]");
+                    versionAttributesWriter.WriteLine($"[assembly: AssemblyInformationalVersion(\"{values["GitTag"]}\")]");
+                }
+                values["VersionAttributes"] = versionAttributesWriter.ToString();
 
                 var source = GetGitInfoTemplate();
                 var regex = new Regex(@"\$\((.*?)\)", RegexOptions.Compiled);
