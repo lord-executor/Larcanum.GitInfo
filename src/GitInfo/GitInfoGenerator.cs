@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.Text;
 namespace Larcanum.GitInfo
 {
     [Generator]
-    public class GitInfoDummyGenerator : IIncrementalGenerator
+    public class GitInfoGenerator : IIncrementalGenerator
     {
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
