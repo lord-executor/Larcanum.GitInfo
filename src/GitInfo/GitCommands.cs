@@ -11,9 +11,23 @@ public class GitCommands
         _contextDirectory = contextDirectory;
     }
 
-    public string Version()
+    public (string? GitPath, string? Version) Version()
     {
-        return GetOutput("--version", withContext: false);
+        var procInfo = new ProcessStartInfo
+        {
+            FileName = IsWindowsPlatform() ? "where" : "which",
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            Arguments = "git"
+        };
+        var process = Process.Start(procInfo)!;
+        process.WaitForExit();
+        var binPath = process.StandardOutput.ReadToEnd().Trim();
+
+        return process.ExitCode == 0
+            ? (binPath, GetOutput("--version"))
+            : (null, null);
     }
 
     public string RepositoryRoot()
@@ -56,7 +70,7 @@ public class GitCommands
         var process = RunGitCommand(args, withContext);
         return process.ExitCode == 0
             ? process.StandardOutput.ReadToEnd().Trim()
-            : process.StartInfo.Arguments;// process.StandardError.ReadToEnd().Trim();
+            : process.StandardError.ReadToEnd().Trim();
     }
 
     private Process RunGitCommand(string args, bool withContext = true)
@@ -80,5 +94,13 @@ public class GitCommands
         var process = Process.Start(procInfo)!;
         process.WaitForExit();
         return process;
+    }
+
+    private bool IsWindowsPlatform()
+    {
+#pragma warning disable RS1035
+        return Environment.OSVersion.Platform == PlatformID.Win32S || Environment.OSVersion.Platform == PlatformID.Win32NT
+            || Environment.OSVersion.Platform == PlatformID.Win32Windows || Environment.OSVersion.Platform == PlatformID.WinCE;
+#pragma warning restore RS1035
     }
 }

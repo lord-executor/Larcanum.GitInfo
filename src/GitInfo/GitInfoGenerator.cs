@@ -13,6 +13,7 @@ namespace Larcanum.GitInfo
     {
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
+
             var config = context.AnalyzerConfigOptionsProvider.Select(static (options, cancellationToken) =>
             {
                 return new GitInfoConfig()
@@ -57,26 +58,19 @@ namespace Larcanum.GitInfo
 
             context.RegisterSourceOutput(config, (ctx, configValue) =>
             {
-                var proc = new ProcessStartInfo
-                {
-                    FileName = "git",
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    Arguments = "rev-parse --short HEAD"
-                };
+                var git = new GitCommands(configValue.ProjectDir);
+                var gitVersion = git.Version();
 
                 var sw = new StringWriter();
                 sw.WriteLine("// Generator Context");
                 sw.WriteLine($"// ProjectDir: {configValue.ProjectDir}");
                 sw.WriteLine($"// RootNamespace: {configValue.RootNamespace}");
+                sw.WriteLine($"// GitBin: {gitVersion.GitPath}");
+                sw.WriteLine($"// GitVersion: {gitVersion.Version}");
                 sw.WriteLine($"// GitInfoGenerateAssemblyVersion: {configValue.GitInfoGenerateAssemblyVersion}");
                 sw.WriteLine($"// Test: {configValue}");
                 sw.WriteLine($"// Timestamp: {DateTime.Now:o}");
 
-
-
-                var git = new GitCommands(configValue.ProjectDir);
                 var values = new Dictionary<string, string>
                 {
                     ["Context"] = sw.ToString(),
