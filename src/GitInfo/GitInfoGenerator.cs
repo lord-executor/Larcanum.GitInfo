@@ -20,21 +20,16 @@ namespace Larcanum.GitInfo
             context.RegisterSourceOutput(config, (ctx, configValue) =>
             {
                 var git = new GitCommands(configValue.GitInfoGitBin, configValue.ProjectDir);
-                var gitVersion = git.Version();
+                (configValue.GitPath, configValue.GitVersion) = git.Version();
+                var generatorContext = configValue.ToDictionary();
 
                 var sw = new StringWriter();
-                sw.WriteLine("// Generator Context");
-                sw.WriteLine($"// ProjectDir: {configValue.ProjectDir}");
-                sw.WriteLine($"// RootNamespace: {configValue.RootNamespace}");
-                sw.WriteLine($"// GitBin: {gitVersion.GitPath}");
-                sw.WriteLine($"// GitVersion: {gitVersion.Version}");
-                sw.WriteLine($"// GitInfoGenerateAssemblyVersion: {configValue.GitInfoGenerateAssemblyVersion}");
-                sw.WriteLine($"// Test: {configValue}");
-                sw.WriteLine($"// Timestamp: {DateTime.Now:o}");
+
 
                 var values = new Dictionary<string, string>
                 {
-                    ["Context"] = sw.ToString(),
+                    ["Context"] = ContextToComment(generatorContext),
+                    ["Namespace"] = configValue.GitInfoGlobalNamespace ? string.Empty : $"namespace {configValue.RootNamespace};",
                     ["GitRoot"] = git.RepositoryRoot(),
                     ["GitIsDirty"] = git.IsDirty().ToString().ToLowerInvariant(),
                     ["GitBranch"] = git.BranchName(),
@@ -56,25 +51,27 @@ namespace Larcanum.GitInfo
 
                 ctx.AddSource("GitInfo.g.cs", BuildSourceText("GitInfo.cs.tpl", values));
 
-                var debugValues = typeof(GitInfoConfig)
-                    .GetProperties()
-                    .ToDictionary(p => p.Name, p => p.GetValue(configValue));
-                debugValues["GitPath"] = gitVersion.GitPath ?? string.Empty;
-                debugValues["GitVersion"] = gitVersion.Version ?? string.Empty;
-                debugValues["Timestamp"] = DateTime.Now.ToString("o");
-                debugValues["GitPath"] = gitVersion.GitPath ?? string.Empty;
-
-                var propWriter = new StringWriter();
-                foreach (var pair in debugValues)
+                ctx.AddSource("GitInfo.Debug.g.cs", BuildSourceText("GitInfo.Debug.cs.tpl", new Dictionary<string, string>
                 {
-                    propWriter.WriteLine($"{pair.Key} = @\"{pair.Value}\",");
-                }
-
-                ctx.AddSource("GitInfo.Debug.g.cs", BuildSourceText("GitInfo.Debug.cs.tpl", new Dictionary<string, string> { ["DebugProps"] = propWriter.ToString() }));
+                    ["DebugProps"] = ContextToAnonProps(generatorContext)
+                }));
             });
         }
 
-        private SourceText BuildSourceText(string templateName, Dictionary<string, string> values)
+        private static string ContextToComment(Dictionary<string, string> context)
+        {
+            return string.Join("\n", context
+                .Select(pair => $"// {pair.Key}: {pair.Value}")
+                .Prepend("// Generator Context"));
+        }
+
+        private static string ContextToAnonProps(Dictionary<string, string> context)
+        {
+            return string.Join("\n", context
+                .Select(pair => $"        {pair.Key} = @\"{pair.Value}\","));
+        }
+
+        private static SourceText BuildSourceText(string templateName, Dictionary<string, string> values)
         {
             var source = GetGitInfoTemplate(templateName);
             source = PlaceholderRegex.Replace(source, match =>

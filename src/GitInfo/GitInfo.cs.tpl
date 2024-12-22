@@ -4,6 +4,8 @@ $(Context)
 
 $(VersionAttributes)
 
+$(Namespace)
+
 /// <summary>Provides access to the git information for the current assembly.</summary>
 public partial class GitInfo
 {
@@ -20,6 +22,4 @@ public partial class GitInfo
     public const string CommitDate = @"$(GitCommitDate)";
 
     public const string Tag = @"$(GitTag)";
-
-    $(DebugConstants)
 }

@@ -13,6 +13,26 @@ public record GitInfoConfig
     public Regex GitInfoVersionRegex { get; set; } = new Regex("");
     public bool GitInfoGenerateAssemblyVersion { get; set; }
 
+    public string? GitPath { get; set; }
+    public string? GitVersion { get; set; }
+    public string Timestamp { get; } = DateTime.Now.ToString("o");
+
+    public Dictionary<string, string> ToDictionary()
+    {
+        return new Dictionary<string, string>
+        {
+            ["RootNamespace"] = RootNamespace,
+            ["ProjectDir"] = ProjectDir,
+            ["GitInfoGlobalNamespace"] = GitInfoGlobalNamespace.ToString(),
+            ["GitInfoGitBin"] = GitInfoGitBin,
+            ["GitInfoVersionRegex"] = GitInfoVersionRegex.ToString(),
+            ["GitInfoGenerateAssemblyVersion"] = GitInfoGenerateAssemblyVersion.ToString(),
+            ["GitPath"] = GitPath ?? string.Empty,
+            ["GitVersion"] = GitVersion ?? string.Empty,
+            ["Timestamp"] = Timestamp,
+        };
+    }
+
     public static GitInfoConfig FromOptions(AnalyzerConfigOptions options)
     {
         return new GitInfoConfig()
