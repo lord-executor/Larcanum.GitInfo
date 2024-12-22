@@ -15,6 +15,11 @@ jobs:
             # Checkout the repository
             -   name: Checkout code
                 uses: actions/checkout@v4
+                with:
+                    # Tags aren't fetched by default, but we want them so that we can have a basic unit test for
+                    # the GitInfo.Tag property. The "fetch-tags" configuration doesn't actually _fetch_ the tags, it
+                    # just _allows_ tags to be fetched, but with a fetch-depth of 0 (everything) we get tags included
+                    fetch-depth: 0
 
             # Setup .NET Core SDK
             -   name: Setup .NET

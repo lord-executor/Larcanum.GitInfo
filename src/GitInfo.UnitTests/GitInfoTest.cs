@@ -31,7 +31,17 @@ public partial class GitInfoTest
     [Test]
     public void GeneratedClass_GitInfo_TagMatchesProjectVersioning()
     {
-        GitInfo.Tag.Should().MatchRegex(VersionExpression);
+        // Expecting all tags to be present in CI is a bit problematic, so we don't
+        // do that. The tag _either_ matches the version expression or it matches
+        // the short hash if tags are not available.
+        if (VersionExpression.IsMatch(GitInfo.Tag))
+        {
+            true.Should().BeTrue();
+        }
+        else
+        {
+            GitInfo.Tag.Should().Be(GitInfo.CommitShortHash);
+        }
     }
 
     [Test]
