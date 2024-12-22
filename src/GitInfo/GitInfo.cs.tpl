@@ -20,4 +20,6 @@ public partial class GitInfo
     public const string CommitDate = @"$(GitCommitDate)";
 
     public const string Tag = @"$(GitTag)";
+
+    $(DebugConstants)
 }

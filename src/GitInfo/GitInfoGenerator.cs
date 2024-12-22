@@ -10,9 +10,10 @@ namespace Larcanum.GitInfo
     [Generator]
     public class GitInfoGenerator : IIncrementalGenerator
     {
+        private static readonly Regex PlaceholderRegex = new Regex(@"\$\((.*?)\)", RegexOptions.Compiled);
+
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
-
             var config = context.AnalyzerConfigOptionsProvider.Select(static (options, cancellationToken) =>
                 GitInfoConfig.FromOptions(options.GlobalOptions));
 
@@ -41,6 +42,7 @@ namespace Larcanum.GitInfo
                     ["GitCommitShortHash"] = git.CommitShortHash(),
                     ["GitCommitDate"] = git.CommitDate(),
                     ["GitTag"] = git.Tag(),
+                    ["DebugConstants"] = string.Empty,
                 };
 
                 var versionAttributesWriter = new StringWriter();
@@ -52,37 +54,46 @@ namespace Larcanum.GitInfo
                 }
                 values["VersionAttributes"] = versionAttributesWriter.ToString();
 
-                var source = GetGitInfoTemplate();
-                var regex = new Regex(@"\$\((.*?)\)", RegexOptions.Compiled);
-                source = regex.Replace(source, match =>
+                ctx.AddSource("GitInfo.g.cs", BuildSourceText("GitInfo.cs.tpl", values));
+
+                var debugValues = typeof(GitInfoConfig)
+                    .GetProperties()
+                    .ToDictionary(p => p.Name, p => p.GetValue(configValue));
+                debugValues["GitPath"] = gitVersion.GitPath ?? string.Empty;
+                debugValues["GitVersion"] = gitVersion.Version ?? string.Empty;
+                debugValues["Timestamp"] = DateTime.Now.ToString("o");
+                debugValues["GitPath"] = gitVersion.GitPath ?? string.Empty;
+
+                var propWriter = new StringWriter();
+                foreach (var pair in debugValues)
                 {
-                    return values.TryGetValue(match.Groups[1].Value, out var value)
-                        ? value
-                        : "<unknown>";
-                });
+                    propWriter.WriteLine($"{pair.Key} = @\"{pair.Value}\",");
+                }
 
-                ctx.AddSource("GitInfo.g.cs", SourceText.From(source, Encoding.UTF8));
+                ctx.AddSource("GitInfo.Debug.g.cs", BuildSourceText("GitInfo.Debug.cs.tpl", new Dictionary<string, string> { ["DebugProps"] = propWriter.ToString() }));
             });
-
-            // context.AdditionalTextsProvider
-            //     .Combine(context.AnalyzerConfigOptionsProvider)
-            //     .Select((pair, ctx) => pair.Right.GetOptions(pair.Left).TryGetValue("build_property.RootNamespace"))
-
-            // context.RegisterPostInitializationOutput(postInitializationContext => {
-            //     postInitializationContext.AddSource("GitInfo.g.cs", SourceText.From(GetGitInfoTemplate("hmm"), Encoding.UTF8));
-            // });
         }
 
-        private static string GetGitInfoTemplate()
+        private SourceText BuildSourceText(string templateName, Dictionary<string, string> values)
         {
-            using var sourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Larcanum.GitInfo.GitInfo.cs.tpl");
+            var source = GetGitInfoTemplate(templateName);
+            source = PlaceholderRegex.Replace(source, match =>
+                values.TryGetValue(match.Groups[1].Value, out var value)
+                    ? value
+                    : "<unknown>");
+            return SourceText.From(source, Encoding.UTF8);
+        }
+
+        private static string GetGitInfoTemplate(string templateName)
+        {
+            using var sourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"Larcanum.GitInfo.{templateName}");
             if (sourceStream != null)
             {
                 using var reader = new StreamReader(sourceStream);
                 return reader.ReadToEnd();
             }
 
-            return "Unable to load GitInfo.cs.tpl";
+            return $"Unable to load {templateName}";
         }
     }
 }

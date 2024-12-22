@@ -8,7 +8,7 @@
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <RootNamespace>Larcanum.GitInfo</RootNamespace>
         <AssemblyName>Larcanum.GitInfo</AssemblyName>
-        <Version>0.2.0</Version>
+        <Version>0.3.0</Version>
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <!-- Since we don't have an actual _lib_ folder, this warning shows up which we can (hopefully) ignore -->
         <NoWarn>NU5128</NoWarn>
@@ -32,7 +32,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Remove="GitInfo.cs.tpl" />
+        <EmbeddedResource Include="GitInfo.Debug.cs.tpl" WithCulture="false" />
         <EmbeddedResource Include="GitInfo.cs.tpl" WithCulture="false" />
     </ItemGroup>
 
