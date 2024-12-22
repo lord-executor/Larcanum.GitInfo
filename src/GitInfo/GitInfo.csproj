@@ -8,7 +8,7 @@
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <RootNamespace>Larcanum.GitInfo</RootNamespace>
         <AssemblyName>Larcanum.GitInfo</AssemblyName>
-        <Version>0.3.0</Version>
+        <Version>0.4.0</Version>
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <!-- Since we don't have an actual _lib_ folder, this warning shows up which we can (hopefully) ignore -->
         <NoWarn>NU5128</NoWarn>

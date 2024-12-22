@@ -16,7 +16,7 @@ public record GitInfoConfig
 
     public string? GitPath { get; set; }
     public string? GitVersion { get; set; }
-    public string Timestamp { get; } = DateTime.Now.ToString("o");
+    public string Timestamp => DateTime.Now.ToString("o");
 
     public Dictionary<string, string> ToDictionary()
     {
