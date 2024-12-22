@@ -9,8 +9,6 @@ $(Namespace)
 /// <summary>Provides access to the git information for the current assembly.</summary>
 public partial class GitInfo
 {
-    public const string GitRoot = @"$(GitRoot)";
-
     public const bool IsDirty = $(GitIsDirty);
 
     public const string Branch = @"$(GitBranch)";

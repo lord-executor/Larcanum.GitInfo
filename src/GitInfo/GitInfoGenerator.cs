@@ -21,6 +21,7 @@ namespace Larcanum.GitInfo
             {
                 var git = new GitCommands(configValue.GitInfoGitBin, configValue.ProjectDir);
                 (configValue.GitPath, configValue.GitVersion) = git.Version();
+                configValue.GitRoot = git.RepositoryRoot();
                 var generatorContext = configValue.ToDictionary();
 
                 var tag = git.Tag();
@@ -30,7 +31,6 @@ namespace Larcanum.GitInfo
                 {
                     ["Context"] = ContextToComment(generatorContext),
                     ["Namespace"] = configValue.GitInfoGlobalNamespace ? string.Empty : $"namespace {configValue.RootNamespace};",
-                    ["GitRoot"] = git.RepositoryRoot(),
                     ["GitIsDirty"] = git.IsDirty().ToString().ToLowerInvariant(),
                     ["GitBranch"] = git.BranchName(),
                     ["GitCommitHash"] = git.CommitHash(),
