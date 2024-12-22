@@ -1,0 +1,36 @@
+name: Build
+
+on:
+    push: {}
+
+env:
+    SOLUTION_FILE: src/GitInfo.sln
+
+jobs:
+    build:
+
+        runs-on: ubuntu-latest
+
+        steps:
+            # Checkout the repository
+            -   name: Checkout code
+                uses: actions/checkout@v4
+                with:
+                    # Tags aren't fetched by default, but we want them so that we can have a basic unit test for
+                    # the GitInfo.Tag property. The "fetch-tags" configuration doesn't actually _fetch_ the tags, it
+                    # just _allows_ tags to be fetched, but with a fetch-depth of 0 (everything) we get tags included
+                    fetch-depth: 0
+
+            # Setup .NET Core SDK
+            -   name: Setup .NET
+                uses: actions/setup-dotnet@v4
+                with:
+                    dotnet-version: 9.0.x
+            -   name: Restore dependencies
+                run: dotnet restore $SOLUTION_FILE
+            -   name: Build
+                run: dotnet build --no-restore $SOLUTION_FILE
+            -   name: Test
+                run: dotnet test --no-build --verbosity normal $SOLUTION_FILE
+            -   name: Run GitInfo.Out
+                run: dotnet run --no-build --project src/GitInfo.Out/GitInfo.Out.csproj
