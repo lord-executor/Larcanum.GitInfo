@@ -1,0 +1,31 @@
+name: Build
+
+on:
+    push: {}
+
+env:
+    SOLUTION_FILE: src/GitInfo.sln
+
+jobs:
+    build:
+
+        runs-on: ubuntu-latest
+
+        steps:
+            # Checkout the repository
+            -   name: Checkout code
+                uses: actions/checkout@v4
+
+            # Setup .NET Core SDK
+            -   name: Setup .NET
+                uses: actions/setup-dotnet@v4
+                with:
+                    dotnet-version: 9.0.x
+            -   name: Restore dependencies
+                run: dotnet restore $SOLUTION_FILE
+            -   name: Build
+                run: dotnet build --no-restore $SOLUTION_FILE
+            -   name: Test
+                run: dotnet test --no-build --verbosity normal $SOLUTION_FILE
+            -   name: Run GitInfo.Out
+                run: dotnet run --no-build --project src/GitInfo.Out/GitInfo.Out.csproj
