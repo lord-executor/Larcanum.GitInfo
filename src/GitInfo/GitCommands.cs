@@ -4,15 +4,22 @@ namespace Larcanum.GitInfo;
 
 public class GitCommands
 {
+    private readonly string _gitBinPath;
     private readonly string _contextDirectory;
 
-    public GitCommands(string contextDirectory)
+    public GitCommands(string gitBinPath, string contextDirectory)
     {
+        _gitBinPath = gitBinPath;
         _contextDirectory = contextDirectory;
     }
 
     public (string? GitPath, string? Version) Version()
     {
+        if (Path.IsPathRooted(_gitBinPath))
+        {
+            return (_gitBinPath, GetOutput("--version"));
+        }
+
         var procInfo = new ProcessStartInfo
         {
             FileName = IsWindowsPlatform() ? "where" : "which",
@@ -77,7 +84,7 @@ public class GitCommands
     {
         var procInfo = new ProcessStartInfo
         {
-            FileName = "git",
+            FileName = _gitBinPath,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,

@@ -2,8 +2,6 @@
 
 $(Context)
 
-using System.Reflection;
-
 $(VersionAttributes)
 
 /// <summary>Provides access to the git information for the current assembly.</summary>

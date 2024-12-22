@@ -1,0 +1,28 @@
+﻿<Project>
+    <Target Name="GitInfoVersion" BeforeTargets="BeforeBuild" Condition="'$(Version)' == '1.0.0' and '$(GitInfoUpdateVersionProp)' == 'true'">
+        <Exec Command="$(GitInfoGitBin) describe --tags --always"
+              EchoOff="true"
+              ConsoleToMsBuild="true"
+              ContinueOnError="true"
+              IgnoreExitCode="true"
+              StandardErrorImportance="low"
+              StandardOutputImportance="low"
+              StdOutEncoding="utf-8"
+              WorkingDirectory="$(ProjectDir)">
+            <Output TaskParameter="ConsoleOutput" PropertyName="_GitTag" />
+            <Output TaskParameter="ExitCode" PropertyName="_GitExitCode" />
+        </Exec>
+
+        <PropertyGroup>
+            <Version Condition="'$(_GitExitCode)' != '0' or !$([System.Text.RegularExpressions.Regex]::IsMatch('$(_GitTag)', '$(GitInfoVersionRegex)'))">1.0.0</Version>
+            <!--
+                If the tag matches the GitInfoVersionRegex, then we effectively just strip out the prefix since the
+                rest is a valid version number in the context of the build.
+            -->
+            <Version Condition="'$(_GitExitCode)' == '0' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(_GitTag)', '$(GitInfoVersionRegex)'))"
+                >$([System.Text.RegularExpressions.Regex]::Replace($(_GitTag), $(GitInfoVersionRegex), "${VERSION}"))</Version>
+        </PropertyGroup>
+
+        <Message Text="GitInfo updated Version to '$(Version)' based on git tag '$(_GitTag)'" Importance="normal" />
+    </Target>
+</Project>

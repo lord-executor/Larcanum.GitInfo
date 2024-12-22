@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -15,50 +14,11 @@ namespace Larcanum.GitInfo
         {
 
             var config = context.AnalyzerConfigOptionsProvider.Select(static (options, cancellationToken) =>
-            {
-                return new GitInfoConfig()
-                {
-                    RootNamespace =
-                        options.GlobalOptions.TryGetValue("build_property.RootNamespace", out var rootNamespace)
-                            ? rootNamespace
-                            : string.Empty,
-                    ProjectDir = options.GlobalOptions.TryGetValue("build_property.ProjectDir", out var projectDir)
-                        ? projectDir
-                        : string.Empty,
-                    Test = options.GlobalOptions.TryGetValue("build_property.GitInfoGenerateAssemblyVersion", out var test) ? test : string.Empty,
-                    GitInfoGenerateAssemblyVersion = options.GlobalOptions.TryGetValue("build_property.GitInfoGenerateAssemblyVersion", out var generateAssemblyVersion) && bool.Parse(generateAssemblyVersion),
-                };
-            });
-
-            var test = context.AnalyzerConfigOptionsProvider.Select(static (options, cancellationToken) =>
-            {
-                return options.GlobalOptions.TryGetValue("gitinfo_something", out var test)
-                    ? test
-                    : string.Empty;
-            });
-
-            // var emitLoggingPipeline = context.AdditionalTextsProvider
-            //     .Combine(context.AnalyzerConfigOptionsProvider)
-            //     .Select((pair, ctx) =>
-            //         pair.Right.GetOptions(pair.Left).TryGetValue("build_metadata.AdditionalFiles.MyGenerator_EnableLogging", out var perFileLoggingSwitch)
-            //             ? perFileLoggingSwitch.Equals("true", StringComparison.OrdinalIgnoreCase)
-            //             : pair.Right.GlobalOptions.TryGetValue("build_property.MyGenerator_EnableLogging", out var emitLoggingSwitch)
-            //                 ? emitLoggingSwitch.Equals("true", StringComparison.OrdinalIgnoreCase)
-            //                 : false);
-            //
-            // var sourcePipeline = context.AdditionalTextsProvider.Select((file, ctx) =>
-            // {
-            //     return file.Path;
-            // });
-            //
-            // context.RegisterSourceOutput(sourcePipeline.Combine(emitLoggingPipeline), (context, pair) =>
-            // {
-            //     context.AddSource("GitInfoDummyGenerator", SourceText.From(pair.Left, Encoding.UTF8));
-            // });
+                GitInfoConfig.FromOptions(options.GlobalOptions));
 
             context.RegisterSourceOutput(config, (ctx, configValue) =>
             {
-                var git = new GitCommands(configValue.ProjectDir);
+                var git = new GitCommands(configValue.GitInfoGitBin, configValue.ProjectDir);
                 var gitVersion = git.Version();
 
                 var sw = new StringWriter();
@@ -86,9 +46,9 @@ namespace Larcanum.GitInfo
                 var versionAttributesWriter = new StringWriter();
                 if (configValue.GitInfoGenerateAssemblyVersion)
                 {
-                    versionAttributesWriter.WriteLine("[assembly: AssemblyVersion(\"1.2.4.8\")]");
-                    versionAttributesWriter.WriteLine("[assembly: AssemblyFileVersion(\"1.2.4.8\")]");
-                    versionAttributesWriter.WriteLine($"[assembly: AssemblyInformationalVersion(\"{values["GitTag"]}\")]");
+                    versionAttributesWriter.WriteLine("[assembly: System.Reflection.AssemblyVersion(\"1.2.4.8\")]");
+                    versionAttributesWriter.WriteLine("[assembly: System.Reflection.AssemblyFileVersion(\"1.2.4.8\")]");
+                    versionAttributesWriter.WriteLine($"[assembly: System.Reflection.AssemblyInformationalVersion(\"{values["GitTag"]}\")]");
                 }
                 values["VersionAttributes"] = versionAttributesWriter.ToString();
 
