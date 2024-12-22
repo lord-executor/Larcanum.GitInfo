@@ -22,4 +22,6 @@ public partial class GitInfo
     public const string CommitDate = @"$(GitCommitDate)";
 
     public const string Tag = @"$(GitTag)";
+
+    public const string DotNetVersion = @"$(DotNetVersion)";
 }

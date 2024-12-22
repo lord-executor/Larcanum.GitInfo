@@ -23,6 +23,9 @@ namespace Larcanum.GitInfo
                 (configValue.GitPath, configValue.GitVersion) = git.Version();
                 var generatorContext = configValue.ToDictionary();
 
+                var tag = git.Tag();
+                var version = ParseVersion(tag, configValue);
+
                 var values = new Dictionary<string, string>
                 {
                     ["Context"] = ContextToComment(generatorContext),
@@ -33,15 +36,15 @@ namespace Larcanum.GitInfo
                     ["GitCommitHash"] = git.CommitHash(),
                     ["GitCommitShortHash"] = git.CommitShortHash(),
                     ["GitCommitDate"] = git.CommitDate(),
-                    ["GitTag"] = git.Tag(),
-                    ["DebugConstants"] = string.Empty,
+                    ["GitTag"] = tag,
+                    ["DotNetVersion"] = version.ToString(),
                 };
 
                 var versionAttributesWriter = new StringWriter();
                 if (configValue.GitInfoGenerateAssemblyVersion)
                 {
-                    versionAttributesWriter.WriteLine("[assembly: System.Reflection.AssemblyVersion(\"1.2.4.8\")]");
-                    versionAttributesWriter.WriteLine("[assembly: System.Reflection.AssemblyFileVersion(\"1.2.4.8\")]");
+                    versionAttributesWriter.WriteLine($"[assembly: System.Reflection.AssemblyVersion(\"{version}\")]");
+                    versionAttributesWriter.WriteLine($"[assembly: System.Reflection.AssemblyFileVersion(\"{version}\")]");
                     versionAttributesWriter.WriteLine($"[assembly: System.Reflection.AssemblyInformationalVersion(\"{values["GitTag"]}\")]");
                 }
                 values["VersionAttributes"] = versionAttributesWriter.ToString();
@@ -57,6 +60,16 @@ namespace Larcanum.GitInfo
                     }));
                 }
             });
+        }
+
+        private static Version ParseVersion(string tag, GitInfoConfig config)
+        {
+            var versionMatch = config.GitInfoVersionRegex.Match(tag);
+            return versionMatch.Success
+                ? new Version(int.Parse(versionMatch.Groups["MAJOR"].Value),
+                    int.Parse(versionMatch.Groups["MINOR"].Value),
+                    int.Parse(versionMatch.Groups["PATCH"].Value))
+                : new Version(1, 0, 0);
         }
 
         private static string ContextToComment(Dictionary<string, string> context)
