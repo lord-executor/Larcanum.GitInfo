@@ -4,7 +4,7 @@
         <CompilerVisibleProperty Include="GitInfoGitBin" />
         <CompilerVisibleProperty Include="GitInfoVersionRegex" />
         <CompilerVisibleProperty Include="GitInfoGenerateAssemblyVersion" />
-        <CompilerVisibleProperty Include="GitInfoGenerateAssemblyVersion" />
+        <CompilerVisibleProperty Include="GitInfoDebug" />
     </ItemGroup>
 
     <PropertyGroup>
@@ -17,5 +17,6 @@
         <GenerateAssemblyVersionAttribute Condition="'$(GitInfoGenerateAssemblyVersion)' == 'true'">false</GenerateAssemblyVersionAttribute>
         <GenerateAssemblyFileVersionAttribute Condition="'$(GitInfoGenerateAssemblyVersion)' == 'true'">false</GenerateAssemblyFileVersionAttribute>
         <GenerateAssemblyInformationalVersionAttribute Condition="'$(GitInfoGenerateAssemblyVersion)' == 'true'">false</GenerateAssemblyInformationalVersionAttribute>
+        <GitInfoDebug Condition="'$(GitInfoDebug)' == ''">false</GitInfoDebug>
     </PropertyGroup>
 </Project>

@@ -7,11 +7,13 @@
         <Nullable>enable</Nullable>
         <AssemblyName>Larcanum.GitInfo.UnitTests</AssemblyName>
         <RootNamespace>Larcanum.GitInfo.UnitTests</RootNamespace>
+
     </PropertyGroup>
 
-<!--    <PropertyGroup>-->
+    <PropertyGroup>
+        <GitInfoDebug>true</GitInfoDebug>
 <!--        <GitInfoGenerateAssemblyVersion>false</GitInfoGenerateAssemblyVersion>-->
-<!--    </PropertyGroup>-->
+    </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="TUnit" Version="0.5.18"/>

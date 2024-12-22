@@ -9,4 +9,10 @@ public class GitInfoTest
     {
         GitInfo.CommitHash.Should().HaveLength(40);
     }
+
+    [Test]
+    public void GeneratedClass_GitInfo_DebugEnabled()
+    {
+        GitInfo.Debug.Should().NotBeNull();
+    }
 }

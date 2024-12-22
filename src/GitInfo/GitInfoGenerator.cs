@@ -23,9 +23,6 @@ namespace Larcanum.GitInfo
                 (configValue.GitPath, configValue.GitVersion) = git.Version();
                 var generatorContext = configValue.ToDictionary();
 
-                var sw = new StringWriter();
-
-
                 var values = new Dictionary<string, string>
                 {
                     ["Context"] = ContextToComment(generatorContext),
@@ -51,10 +48,14 @@ namespace Larcanum.GitInfo
 
                 ctx.AddSource("GitInfo.g.cs", BuildSourceText("GitInfo.cs.tpl", values));
 
-                ctx.AddSource("GitInfo.Debug.g.cs", BuildSourceText("GitInfo.Debug.cs.tpl", new Dictionary<string, string>
+                if (configValue.GitInfoDebug)
                 {
-                    ["DebugProps"] = ContextToAnonProps(generatorContext)
-                }));
+                    ctx.AddSource("GitInfo.Debug.g.cs", BuildSourceText("GitInfo.Debug.cs.tpl", new Dictionary<string, string>
+                    {
+                        ["Namespace"] = configValue.GitInfoGlobalNamespace ? string.Empty : $"namespace {configValue.RootNamespace};",
+                        ["DebugProps"] = ContextToAnonProps(generatorContext)
+                    }));
+                }
             });
         }
 

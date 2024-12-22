@@ -12,6 +12,7 @@ public record GitInfoConfig
     public string GitInfoGitBin { get; set; } = string.Empty;
     public Regex GitInfoVersionRegex { get; set; } = new Regex("");
     public bool GitInfoGenerateAssemblyVersion { get; set; }
+    public bool GitInfoDebug { get; set; }
 
     public string? GitPath { get; set; }
     public string? GitVersion { get; set; }
@@ -21,15 +22,16 @@ public record GitInfoConfig
     {
         return new Dictionary<string, string>
         {
-            ["RootNamespace"] = RootNamespace,
-            ["ProjectDir"] = ProjectDir,
-            ["GitInfoGlobalNamespace"] = GitInfoGlobalNamespace.ToString(),
-            ["GitInfoGitBin"] = GitInfoGitBin,
-            ["GitInfoVersionRegex"] = GitInfoVersionRegex.ToString(),
-            ["GitInfoGenerateAssemblyVersion"] = GitInfoGenerateAssemblyVersion.ToString(),
-            ["GitPath"] = GitPath ?? string.Empty,
-            ["GitVersion"] = GitVersion ?? string.Empty,
-            ["Timestamp"] = Timestamp,
+            [nameof(RootNamespace)] = RootNamespace,
+            [nameof(ProjectDir)] = ProjectDir,
+            [nameof(GitInfoGlobalNamespace)] = GitInfoGlobalNamespace.ToString(),
+            [nameof(GitInfoGitBin)] = GitInfoGitBin,
+            [nameof(GitInfoVersionRegex)] = GitInfoVersionRegex.ToString(),
+            [nameof(GitInfoGenerateAssemblyVersion)] = GitInfoGenerateAssemblyVersion.ToString(),
+            [nameof(GitInfoDebug)] = GitInfoDebug.ToString(),
+            [nameof(GitPath)] = GitPath ?? string.Empty,
+            [nameof(GitVersion)] = GitVersion ?? string.Empty,
+            [nameof(Timestamp)] = Timestamp,
         };
     }
 
@@ -43,6 +45,7 @@ public record GitInfoConfig
             GitInfoGitBin = GetBuildProp(options, nameof(GitInfoGitBin)),
             GitInfoVersionRegex = new Regex(GetBuildProp(options, nameof(GitInfoVersionRegex)), RegexOptions.Compiled),
             GitInfoGenerateAssemblyVersion = GetBuildPropBool(options, nameof(GitInfoGenerateAssemblyVersion)),
+            GitInfoDebug = GetBuildPropBool(options, nameof(GitInfoDebug)),
         };
     }
 
