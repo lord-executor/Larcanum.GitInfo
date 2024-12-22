@@ -8,10 +8,19 @@
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <RootNamespace>Larcanum.GitInfo</RootNamespace>
         <AssemblyName>Larcanum.GitInfo</AssemblyName>
+    </PropertyGroup>
+
+    <!-- NuGet Package Configuration -->
+    <PropertyGroup>
         <Version>0.4.0</Version>
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <!-- Since we don't have an actual _lib_ folder, this warning shows up which we can (hopefully) ignore -->
         <NoWarn>NU5128</NoWarn>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <RepositoryUrl>https://github.com/lord-executor/Larcanum.GitInfo</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageProjectUrl>https://github.com/lord-executor/Larcanum.GitInfo</PackageProjectUrl>
     </PropertyGroup>
 
     <ItemGroup>
@@ -20,13 +29,14 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Include="..\..\LICENSE" Pack="true" PackagePath=""/>
+        <None Include="..\..\README.md" Pack="true" PackagePath=""/>
         <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <!-- These lines pack the build props/targets files to the `build` folder in the generated package.
-         By convention, the .NET SDK will look for build\<Package Id>.props and build\<Package Id>.targets
-         for automatic inclusion in the build. -->
+        <!--
+            These lines pack the build props/targets files to the `build` folder in the generated package.
+            By convention, the .NET SDK will look for build\<Package Id>.props and build\<Package Id>.targets
+            for automatic inclusion in the build.
+        -->
         <Content Include="build\Larcanum.GitInfo.props" PackagePath="build\" />
         <Content Include="build\Larcanum.GitInfo.targets" PackagePath="build\" />
     </ItemGroup>
