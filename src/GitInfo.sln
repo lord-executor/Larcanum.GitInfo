@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_global", "_global", "{EAB5
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitInfo.Out", "GitInfo.Out\GitInfo.Out.csproj", "{C137DB60-1C5B-40F9-B87E-74CD97922376}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,5 +34,9 @@ Global
 		{3C68ECE5-ED3B-44FA-8915-408527DFFFD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3C68ECE5-ED3B-44FA-8915-408527DFFFD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3C68ECE5-ED3B-44FA-8915-408527DFFFD1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C137DB60-1C5B-40F9-B87E-74CD97922376}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C137DB60-1C5B-40F9-B87E-74CD97922376}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C137DB60-1C5B-40F9-B87E-74CD97922376}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C137DB60-1C5B-40F9-B87E-74CD97922376}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
