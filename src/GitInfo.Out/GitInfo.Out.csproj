@@ -9,11 +9,12 @@
 
     <!-- GitInfo Settings -->
     <PropertyGroup>
+        <GitInfoDebug>true</GitInfoDebug>
         <!-- <GitInfoGitBin>C:\Users\Lukas Angerer\scoop\shims\git.exe</GitInfoGitBin> -->
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Larcanum.GitInfo" Version="0.2.0" />
+      <PackageReference Include="Larcanum.GitInfo" Version="0.3.0" />
     </ItemGroup>
 
 </Project>

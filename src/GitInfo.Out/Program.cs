@@ -5,7 +5,7 @@ using System.Text.Json;
 
 var options = new JsonSerializerOptions() { WriteIndented = true};
 
-var gitInfo = typeof(GitInfo)
+var gitInfo = typeof(GitInfo.Out.GitInfo)
     .GetFields(BindingFlags.Public | BindingFlags.Static)
     .ToDictionary(f => f.Name, f => f.GetValue(null));
 Console.WriteLine(JsonSerializer.Serialize(gitInfo, options));
