@@ -17,6 +17,7 @@ public record GitInfoConfig
     public string? GitPath { get; set; }
     public string? GitVersion { get; set; }
     public string? GitRoot { get; set; }
+    public string? GitFingerprint { get; set; }
     public string Timestamp => DateTime.Now.ToString("o");
 
     public Dictionary<string, string> ToDictionary()
@@ -33,6 +34,7 @@ public record GitInfoConfig
             [nameof(GitPath)] = GitPath ?? string.Empty,
             [nameof(GitVersion)] = GitVersion ?? string.Empty,
             [nameof(GitRoot)] = GitRoot ?? string.Empty,
+            [nameof(GitFingerprint)] = GitFingerprint ?? string.Empty,
             [nameof(Timestamp)] = Timestamp,
         };
     }

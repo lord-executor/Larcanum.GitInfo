@@ -17,22 +17,16 @@
             <Output TaskParameter="ExitCode" PropertyName="_GitExitCode" />
         </Exec>
 
+        <!--
+            If the output of the command changes compared to the previous file contents, then the file will be written
+            which will trigger the source generator.
+        -->
         <WriteLinesToFile
                 Condition="'$(_GitExitCode)' == '0'"
                 File="$(IntermediateOutputPath)GitInfo.fingerprint.txt"
                 Lines="$(_GitFingerprint)"
                 Overwrite="true"
                 WriteOnlyWhenDifferent="true" />
-
-        <!--
-            AdditionalFiles items can be processed by source generators and since the build process does not know if or
-            which additional files are used by which analyzer, any change to an additional file seems to trigger the
-            all source generators. This effectively ensures that if anything about the git describe result changes,
-            the GitInfo code is re-generated during the build.
-        -->
-        <ItemGroup>
-            <AdditionalFiles Include="$(IntermediateOutputPath)GitInfo.fingerprint.txt" />
-        </ItemGroup>
     </Target>
 
     <Target Name="GitInfoVersion" BeforeTargets="BeforeBuild" Condition="'$(Version)' == '1.0.0' and '$(GitInfoUpdateVersionProp)' == 'true'">

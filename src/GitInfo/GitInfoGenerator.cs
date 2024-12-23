@@ -14,52 +14,63 @@ namespace Larcanum.GitInfo
 
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
-            var config = context.AnalyzerConfigOptionsProvider.Select(static (options, cancellationToken) =>
+            var config = context.AnalyzerConfigOptionsProvider.Select(static (options, _) =>
                 GitInfoConfig.FromOptions(options.GlobalOptions));
 
-            context.RegisterSourceOutput(config, (ctx, configValue) =>
-            {
-                var git = new GitCommands(configValue.GitInfoGitBin, configValue.ProjectDir);
-                (configValue.GitPath, configValue.GitVersion) = git.Version();
-                configValue.GitRoot = git.RepositoryRoot();
-                var generatorContext = configValue.ToDictionary();
+            var pipeline = context.AdditionalTextsProvider
+                .Where(static (text) => text.Path.Contains("GitInfo.fingerprint.txt"))
+                .Select(static (text, _) => text.GetText());
 
-                var tag = git.Tag();
-                var version = ParseVersion(tag, configValue);
-
-                var values = new Dictionary<string, string>
+            context.RegisterSourceOutput(pipeline.Combine(config),
+                static (ctx, input) =>
                 {
-                    ["Context"] = ContextToComment(generatorContext),
-                    ["Namespace"] = configValue.GitInfoGlobalNamespace ? string.Empty : $"namespace {configValue.RootNamespace};",
-                    ["GitIsDirty"] = git.IsDirty().ToString().ToLowerInvariant(),
-                    ["GitBranch"] = git.BranchName(),
-                    ["GitCommitHash"] = git.CommitHash(),
-                    ["GitCommitShortHash"] = git.CommitShortHash(),
-                    ["GitCommitDate"] = git.CommitDate(),
-                    ["GitTag"] = tag,
-                    ["DotNetVersion"] = version.ToString(),
-                };
+                    var (fingerprintSource, configValue) = input;
 
-                var versionAttributesWriter = new StringWriter();
-                if (configValue.GitInfoGenerateAssemblyVersion)
-                {
-                    versionAttributesWriter.WriteLine($"[assembly: System.Reflection.AssemblyVersion(\"{version}\")]");
-                    versionAttributesWriter.WriteLine($"[assembly: System.Reflection.AssemblyFileVersion(\"{version}\")]");
-                    versionAttributesWriter.WriteLine($"[assembly: System.Reflection.AssemblyInformationalVersion(\"{values["GitTag"]}\")]");
-                }
-                values["VersionAttributes"] = versionAttributesWriter.ToString();
+                    var git = new GitCommands(configValue.GitInfoGitBin, configValue.ProjectDir);
+                    (configValue.GitPath, configValue.GitVersion) = git.Version();
+                    configValue.GitRoot = git.RepositoryRoot();
+                    configValue.GitFingerprint = fingerprintSource?.ToString().Trim();
+                    var generatorContext = configValue.ToDictionary();
 
-                ctx.AddSource("GitInfo.g.cs", BuildSourceText("GitInfo.cs.tpl", values));
+                    var tag = git.Tag();
+                    var version = ParseVersion(tag, configValue);
 
-                if (configValue.GitInfoDebug)
-                {
-                    ctx.AddSource("GitInfo.Debug.g.cs", BuildSourceText("GitInfo.Debug.cs.tpl", new Dictionary<string, string>
+                    var values = new Dictionary<string, string>
                     {
+                        ["Context"] = ContextToComment(generatorContext),
                         ["Namespace"] = configValue.GitInfoGlobalNamespace ? string.Empty : $"namespace {configValue.RootNamespace};",
-                        ["DebugProps"] = ContextToAnonProps(generatorContext)
-                    }));
-                }
-            });
+                        ["GitIsDirty"] = git.IsDirty().ToString().ToLowerInvariant(),
+                        ["GitBranch"] = git.BranchName(),
+                        ["GitCommitHash"] = git.CommitHash(),
+                        ["GitCommitShortHash"] = git.CommitShortHash(),
+                        ["GitCommitDate"] = git.CommitDate(),
+                        ["GitTag"] = tag,
+                        ["DotNetVersion"] = version.ToString(),
+                    };
+
+                    var versionAttributesWriter = new StringWriter();
+                    if (configValue.GitInfoGenerateAssemblyVersion)
+                    {
+                        versionAttributesWriter.WriteLine($"[assembly: System.Reflection.AssemblyVersion(\"{version}\")]");
+                        versionAttributesWriter.WriteLine($"[assembly: System.Reflection.AssemblyFileVersion(\"{version}\")]");
+                        versionAttributesWriter.WriteLine($"[assembly: System.Reflection.AssemblyInformationalVersion(\"{values["GitTag"]}\")]");
+                    }
+
+                    values["VersionAttributes"] = versionAttributesWriter.ToString();
+
+                    ctx.AddSource("GitInfo.g.cs", BuildSourceText("GitInfo.cs.tpl", values));
+
+                    if (configValue.GitInfoDebug)
+                    {
+                        ctx.AddSource("GitInfo.Debug.g.cs",
+                            BuildSourceText("GitInfo.Debug.cs.tpl",
+                                new Dictionary<string, string>
+                                {
+                                    ["Namespace"] = configValue.GitInfoGlobalNamespace ? string.Empty : $"namespace {configValue.RootNamespace};",
+                                    ["DebugProps"] = ContextToAnonProps(generatorContext)
+                                }));
+                    }
+                });
         }
 
         private static Version ParseVersion(string tag, GitInfoConfig config)

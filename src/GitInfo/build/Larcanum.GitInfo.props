@@ -7,6 +7,17 @@
         <CompilerVisibleProperty Include="GitInfoDebug" />
     </ItemGroup>
 
+    <ItemGroup>
+        <!--
+            AdditionalFiles items can be processed by source generators and since the build process does not know if or
+            which additional files are used by which analyzer, any change to an additional file seems to trigger the
+            all source generators. This effectively ensures that if anything about the git describe result changes,
+            the GitInfo code is re-generated during the build. The contents of the file are irrelevnat for the source
+            generator (but NOT for the MSBuild process), but the existence of the item is not.
+        -->
+        <AdditionalFiles Include="$(IntermediateOutputPath)GitInfo.fingerprint.txt" Visible="false" />
+    </ItemGroup>
+
     <PropertyGroup>
         <GitInfoGlobalNamespace Condition="'$(GitInfoGlobalNamespace)' == ''">false</GitInfoGlobalNamespace>
         <GitInfoGitBin Condition="'$(GitInfoGitBin)' == ''">git</GitInfoGitBin>
