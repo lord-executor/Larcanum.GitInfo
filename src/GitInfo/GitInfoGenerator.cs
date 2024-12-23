@@ -24,29 +24,31 @@ namespace Larcanum.GitInfo
 
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
-            var config = context.AnalyzerConfigOptionsProvider.Select(static (options, _) =>
+            var configProvider = context.AnalyzerConfigOptionsProvider.Select(static (options, _) =>
                 GitInfoConfig.FromOptions(options.GlobalOptions));
 
+            // Using the "GitInfo.fingerprint.txt" from the intermediate output directory (obj) as the input and
+            // trigger for the pipeline ensures that the code generation is triggered whenever that file changes.
             var pipeline = context.AdditionalTextsProvider
                 .Where(static (text) => text.Path.Contains("GitInfo.fingerprint.txt"))
                 .Select(static (text, _) => text.GetText());
 
-            context.RegisterSourceOutput(pipeline.Combine(config),
+            context.RegisterSourceOutput(pipeline.Combine(configProvider),
                 static (ctx, input) =>
                 {
-                    var (fingerprintSource, configValue) = input;
+                    var (fingerprintSource, config) = input;
 
-                    var git = new GitCommands(configValue.GitInfoGitBin, configValue.ProjectDir);
-                    (configValue.GitPath, configValue.GitVersion) = git.Version();
-                    configValue.GitRoot = git.RepositoryRoot();
-                    configValue.GitFingerprint = fingerprintSource?.ToString().Trim();
-                    var generatorContext = configValue.ToDictionary();
+                    var git = new GitCommands(config.GitInfoGitBin, config.ProjectDir);
+                    (config.GitPath, config.GitVersion) = git.Version();
+                    config.GitRoot = git.RepositoryRoot();
+                    config.GitFingerprint = fingerprintSource?.ToString().Trim();
+                    var generatorContext = config.ToDictionary();
 
                     var tag = git.Tag();
-                    var version = ParseVersion(tag, configValue);
-                    var classNamespace = configValue.GitInfoGlobalNamespace || string.IsNullOrWhiteSpace(configValue.GitInfoNamespace)
+                    var version = ParseVersion(tag, config);
+                    var classNamespace = config.GitInfoGlobalNamespace || string.IsNullOrWhiteSpace(config.GitInfoNamespace)
                         ? string.Empty
-                        : $"namespace {configValue.GitInfoNamespace};";
+                        : $"namespace {config.GitInfoNamespace};";
 
                     var values = new Dictionary<string, string>
                     {
@@ -62,10 +64,13 @@ namespace Larcanum.GitInfo
                     };
 
                     var versionAttributesWriter = new StringWriter();
-                    if (configValue.GitInfoGenerateAssemblyVersion)
+                    if (config.GitInfoGenerateAssemblyVersion)
                     {
                         versionAttributesWriter.WriteLine($"[assembly: System.Reflection.AssemblyVersion(\"{version}\")]");
                         versionAttributesWriter.WriteLine($"[assembly: System.Reflection.AssemblyFileVersion(\"{version}\")]");
+                        // AssemblyVersion & AssemblyFileVersion have to be .NET compatible version strings
+                        // of the form Major.Minor.Build.Revision but the AssemblyInformationalVersion is free-form, so
+                        // we use the original git tag description.
                         versionAttributesWriter.WriteLine($"[assembly: System.Reflection.AssemblyInformationalVersion(\"{values["GitTag"]}\")]");
                     }
 
@@ -73,7 +78,7 @@ namespace Larcanum.GitInfo
 
                     ctx.AddSource("GitInfo.g.cs", BuildSourceText("GitInfo.cs.tpl", values));
 
-                    if (configValue.GitInfoDebug)
+                    if (config.GitInfoDebug)
                     {
                         ctx.AddSource("GitInfo.Debug.g.cs",
                             BuildSourceText("GitInfo.Debug.cs.tpl",
@@ -119,6 +124,11 @@ namespace Larcanum.GitInfo
                 .Select(pair => $"        {pair.Key} = @\"{pair.Value}\","));
         }
 
+        /// <summary>
+        /// Replaces all "$(VAR)" expressions in the template given by <paramref name="templateName"/> with values
+        /// from the given <paramref name="values"/> dictionary and creates a <see cref="SourceText"/> from the result.
+        /// If a variable cannot be found, the string &quot;&lt;unknown&gt;&quot; will be inserted.
+        /// </summary>
         private static SourceText BuildSourceText(string templateName, Dictionary<string, string> values)
         {
             var source = GetGitInfoTemplate(templateName);
@@ -129,6 +139,9 @@ namespace Larcanum.GitInfo
             return SourceText.From(source, Encoding.UTF8);
         }
 
+        /// <summary>
+        /// Loads <paramref name="templateName"/> from the embedded resources.
+        /// </summary>
         private static string GetGitInfoTemplate(string templateName)
         {
             using var sourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"Larcanum.GitInfo.{templateName}");

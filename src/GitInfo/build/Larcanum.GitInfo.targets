@@ -3,6 +3,8 @@
         <!--
             This target creates a "GitInfo.fingerprint.txt" with the last output of the following git command
             which serves as a fingerprint to detect when the GitInfo class should be re-generated during the build.
+            The target runs _before_ every build, but most IDEs do their own trickery with optimizations to avoid
+            doing an actual Build whenever possible which can lead to a somewhat stale fingerprint file.
         -->
         <Exec Command="$(GitInfoGitBin) describe --tags --always --dirty"
               EchoOff="true"
@@ -30,6 +32,12 @@
     </Target>
 
     <Target Name="GitInfoVersion" BeforeTargets="BeforeBuild" Condition="'$(Version)' == '1.0.0' and '$(GitInfoUpdateVersionProp)' == 'true'">
+        <!--
+            This target sets the $(Version) property based on the git tag description. It uses the same git command as
+            the source generator. The target only runs if the $(GitInfoUpdateVersionProp) is enabled AND the $(Version)
+            property still has its default value of "1.0.0" which means that it is still possible to override the
+            version by specifying it in the project file or passing it via the command line.
+        -->
         <Exec Command="$(GitInfoGitBin) describe --tags --always"
               EchoOff="true"
               ConsoleToMsBuild="true"
@@ -44,6 +52,9 @@
         </Exec>
 
         <PropertyGroup>
+            <!--
+                If anything goes wrong or the tag description doesn't contain a semantic version, fall back to using 1.0.0 as the version.
+            -->
             <Version Condition="'$(_GitExitCode)' != '0' or !$([System.Text.RegularExpressions.Regex]::IsMatch('$(_GitTag)', '$(GitInfoVersionRegex)'))">1.0.0</Version>
             <!--
                 If the tag matches the GitInfoVersionRegex, then we effectively just strip out the prefix since the

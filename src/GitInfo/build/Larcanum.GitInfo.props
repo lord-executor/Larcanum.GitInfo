@@ -23,7 +23,14 @@
         <GitInfoGlobalNamespace Condition="'$(GitInfoGlobalNamespace)' == ''">false</GitInfoGlobalNamespace>
         <GitInfoNamespace Condition="'$(GitInfoNamespace)' == ''">$(RootNamespace)</GitInfoNamespace>
         <GitInfoGitBin Condition="'$(GitInfoGitBin)' == ''">git</GitInfoGitBin>
-        <!-- v?(?<VERSION>(?<MAJOR>\d+)\.(?<MINOR>\d+)(?:\.(?<PATCH>\d+))?(?:[-+](?<LABEL>[\dA-Za-z\-\.]+))?)$ -->
+        <!--
+            v?(?<VERSION>(?<MAJOR>\d+)\.(?<MINOR>\d+)(?:\.(?<PATCH>\d+))?(?:[-+](?<LABEL>[\dA-Za-z\-\.]+))?)$
+            This regular expression is used to check if the git tag description matches the expected format in both,
+            the source generator context and the MSBuild context.
+            The named groups MAJOR, MINOR, PATCH and LABEL are used in the source generator to derive the .NET compatible Version
+            while the entire VERSION group (everything except the version prefix) is used in the MSBuild context as
+            the $(Version) property as the rest of the MSBuild pipeline does its own processing on that version.
+        -->
         <GitInfoVersionRegex Condition="'$(GitInfoVersionRegex)' == ''">v?(?&lt;VERSION&gt;(?&lt;MAJOR&gt;\d+)\.(?&lt;MINOR&gt;\d+)(?:\.(?&lt;PATCH&gt;\d+))?(?:[-+](?&lt;LABEL&gt;[\dA-Za-z\-\.]+))?)$</GitInfoVersionRegex>
         <GitInfoUpdateVersionProp Condition="'$(GitInfoUpdateVersionProp)' == ''">true</GitInfoUpdateVersionProp>
         <GitInfoGenerateAssemblyVersion Condition="'$(GitInfoGenerateAssemblyVersion)' == ''">true</GitInfoGenerateAssemblyVersion>

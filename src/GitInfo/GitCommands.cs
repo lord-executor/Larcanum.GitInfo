@@ -2,6 +2,9 @@
 
 namespace Larcanum.GitInfo;
 
+/// <summary>
+/// Wrapper for running git commands using <see cref="Process"/>.
+/// </summary>
 public class GitCommands
 {
     private readonly string _gitBinPath;
@@ -13,6 +16,10 @@ public class GitCommands
         _contextDirectory = contextDirectory;
     }
 
+    /// <summary>
+    /// Tries to determine the git version along with the actual path of the executable. If the git command cannot be
+    /// found, both parts of the result will be null.
+    /// </summary>
     public (string? GitPath, string? Version) Version()
     {
         if (Path.IsPathRooted(_gitBinPath))

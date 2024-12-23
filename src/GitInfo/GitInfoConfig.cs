@@ -4,6 +4,11 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Larcanum.GitInfo;
 
+/// <summary>
+/// Contains all the configuration and context that is needed for the source generator. The configuration is mostly
+/// taken from global analyzer configuration in the form of MSBuild properties while the rest is added later in
+/// the process.
+/// </summary>
 public record GitInfoConfig
 {
     public string ProjectDir { get; set; } = string.Empty;

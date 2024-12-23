@@ -2,6 +2,7 @@
 
 $(Namespace)
 
+/// <summary>Additional source generator debug information integrated into the GitInfo class</summary>
 internal partial class GitInfo
 {
     public static readonly object Debug = new {
