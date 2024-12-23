@@ -2,7 +2,7 @@
 
 $(Namespace)
 
-public partial class GitInfo
+internal partial class GitInfo
 {
     public static readonly object Debug = new {
 $(DebugProps)

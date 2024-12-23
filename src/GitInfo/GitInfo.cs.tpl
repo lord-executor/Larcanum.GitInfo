@@ -7,7 +7,7 @@ $(VersionAttributes)
 $(Namespace)
 
 /// <summary>Provides access to the git information for the current assembly.</summary>
-public partial class GitInfo
+internal partial class GitInfo
 {
     public const bool IsDirty = $(GitIsDirty);
 
