@@ -7,11 +7,11 @@
         <Nullable>enable</Nullable>
         <AssemblyName>Larcanum.GitInfo.UnitTests</AssemblyName>
         <RootNamespace>Larcanum.GitInfo.UnitTests</RootNamespace>
-
     </PropertyGroup>
 
     <PropertyGroup>
         <GitInfoDebug>true</GitInfoDebug>
+<!--        <GitInfoNamespace>GitInfo.Common</GitInfoNamespace>-->
 <!--        <GitInfoGenerateAssemblyVersion>false</GitInfoGenerateAssemblyVersion>-->
     </PropertyGroup>
 

@@ -41,11 +41,14 @@ namespace Larcanum.GitInfo
 
                     var tag = git.Tag();
                     var version = ParseVersion(tag, configValue);
+                    var classNamespace = configValue.GitInfoGlobalNamespace
+                        ? string.Empty
+                        : $"namespace {configValue.GitInfoNamespace};";
 
                     var values = new Dictionary<string, string>
                     {
                         ["Context"] = ContextToComment(generatorContext),
-                        ["Namespace"] = configValue.GitInfoGlobalNamespace ? string.Empty : $"namespace {configValue.RootNamespace};",
+                        ["Namespace"] = classNamespace,
                         ["GitIsDirty"] = git.IsDirty().ToString().ToLowerInvariant(),
                         ["GitBranch"] = git.BranchName(),
                         ["GitCommitHash"] = git.CommitHash(),
@@ -73,7 +76,7 @@ namespace Larcanum.GitInfo
                             BuildSourceText("GitInfo.Debug.cs.tpl",
                                 new Dictionary<string, string>
                                 {
-                                    ["Namespace"] = configValue.GitInfoGlobalNamespace ? string.Empty : $"namespace {configValue.RootNamespace};",
+                                    ["Namespace"] = classNamespace,
                                     ["DebugProps"] = ContextToAnonProps(generatorContext)
                                 }));
                     }

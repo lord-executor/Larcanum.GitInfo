@@ -6,8 +6,8 @@ namespace Larcanum.GitInfo;
 
 public record GitInfoConfig
 {
-    public string RootNamespace { get; set; } = string.Empty;
     public string ProjectDir { get; set; } = string.Empty;
+    public string GitInfoNamespace { get; set; } = string.Empty;
     public bool GitInfoGlobalNamespace { get; set; }
     public string GitInfoGitBin { get; set; } = string.Empty;
     public Regex GitInfoVersionRegex { get; set; } = new Regex("");
@@ -24,8 +24,8 @@ public record GitInfoConfig
     {
         return new Dictionary<string, string>
         {
-            [nameof(RootNamespace)] = RootNamespace,
             [nameof(ProjectDir)] = ProjectDir,
+            [nameof(GitInfoNamespace)] = GitInfoNamespace,
             [nameof(GitInfoGlobalNamespace)] = GitInfoGlobalNamespace.ToString(),
             [nameof(GitInfoGitBin)] = GitInfoGitBin,
             [nameof(GitInfoVersionRegex)] = GitInfoVersionRegex.ToString(),
@@ -43,8 +43,8 @@ public record GitInfoConfig
     {
         return new GitInfoConfig()
         {
-            RootNamespace = GetBuildProp(options, nameof(RootNamespace)),
             ProjectDir = GetBuildProp(options, nameof(ProjectDir)),
+            GitInfoNamespace = GetBuildProp(options, nameof(GitInfoNamespace)),
             GitInfoGlobalNamespace = GetBuildPropBool(options, nameof(GitInfoGlobalNamespace)),
             GitInfoGitBin = GetBuildProp(options, nameof(GitInfoGitBin)),
             GitInfoVersionRegex = new Regex(GetBuildProp(options, nameof(GitInfoVersionRegex)), RegexOptions.Compiled),
