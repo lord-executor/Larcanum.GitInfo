@@ -12,7 +12,7 @@
 
     <!-- NuGet Package Configuration -->
     <PropertyGroup>
-        <Version>0.5.0</Version>
+        <Version>0.6.0</Version>
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <!-- Since we don't have an actual _lib_ folder, this warning shows up which we can (hopefully) ignore -->
         <NoWarn>NU5128</NoWarn>

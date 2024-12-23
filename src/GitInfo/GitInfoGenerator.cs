@@ -11,6 +11,13 @@ namespace Larcanum.GitInfo
     public class GitInfoGenerator : IIncrementalGenerator
     {
         private static readonly Regex PlaceholderRegex = new Regex(@"\$\((.*?)\)", RegexOptions.Compiled);
+        /// <summary>
+        /// The "git describe" format is roughly "[tag]-[additiona-commits]-g[short-hash]" as explained in
+        /// https://git-scm.com/docs/git-describe - we extract the number of commits and use that as the _revision_
+        /// for .NET versions.
+        /// e.g. "v1.0.4-14-g2414721" is 14 commits ahead of v1.0.4 with a hash of 2414721
+        /// </summary>
+        private static readonly Regex GitLabelRegex = new Regex(@"^(?<REVISION>\d+)-g[\da-fA-F]", RegexOptions.Compiled);
 
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
@@ -75,12 +82,22 @@ namespace Larcanum.GitInfo
 
         private static Version ParseVersion(string tag, GitInfoConfig config)
         {
+            // from a tag description like "v1.0.4-14-g2414721"
+            //                                THIS ^^ is what we are extracting as the revision
+            var revision = 0;
             var versionMatch = config.GitInfoVersionRegex.Match(tag);
+            if (versionMatch.Groups["LABEL"].Success)
+            {
+                var revisionGroup = GitLabelRegex.Match(versionMatch.Groups["LABEL"].Value).Groups["REVISION"];
+                revision = revisionGroup.Success ? int.Parse(revisionGroup.Value) : 0;
+            }
+
             return versionMatch.Success
                 ? new Version(int.Parse(versionMatch.Groups["MAJOR"].Value),
                     int.Parse(versionMatch.Groups["MINOR"].Value),
-                    int.Parse(versionMatch.Groups["PATCH"].Value))
-                : new Version(1, 0, 0);
+                    int.Parse(versionMatch.Groups["PATCH"].Value),
+                    revision)
+                : new Version(1, 0, 0, 0);
         }
 
         private static string ContextToComment(Dictionary<string, string> context)
