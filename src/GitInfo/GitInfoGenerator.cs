@@ -10,6 +10,9 @@ namespace Larcanum.GitInfo
     [Generator]
     public class GitInfoGenerator : IIncrementalGenerator
     {
+        /// <summary>
+        /// Simple "$(VAR)" replacement regex.
+        /// </summary>
         private static readonly Regex PlaceholderRegex = new Regex(@"\$\((.*?)\)", RegexOptions.Compiled);
         /// <summary>
         /// The "git describe" format is roughly "[tag]-[additiona-commits]-g[short-hash]" as explained in
@@ -41,7 +44,7 @@ namespace Larcanum.GitInfo
 
                     var tag = git.Tag();
                     var version = ParseVersion(tag, configValue);
-                    var classNamespace = configValue.GitInfoGlobalNamespace
+                    var classNamespace = configValue.GitInfoGlobalNamespace || string.IsNullOrWhiteSpace(configValue.GitInfoNamespace)
                         ? string.Empty
                         : $"namespace {configValue.GitInfoNamespace};";
 
