@@ -13,10 +13,13 @@ time.
 This package is designed to be as simple as possible while still getting the job done and to that end, it makes some
 relatively strong assumptions.
 
+- The code is C#, using language version 10 or above
+  - VB support could be added in the future if somebody needs that
+- The .NET Framework version being used is reasonable new (.NET 6+ should do it)
 - The `git` binary is present in the `PATH`
   - This can be configured manually, but by default it assumes that `git` is in the PATH and there is no attempt at discovering other locations
-- You are using [Semantic Versioning](https://semver.org/)
-- You are using `git` tags as the primary source of version information
+- The target project is using [Semantic Versioning](https://semver.org/)
+- The target project is using `git` tags as the primary source of version information
 
 If you need more features than what `Larcanum.GitInfo` provides, then you have three options
 
@@ -74,13 +77,40 @@ public partial class GitInfo
 
 # How it Works
 
+The primary challenge that needed to be solved was to allow _user code_ to actually explicitly **reference** generated
+code as in `GitInfo.CommitHash.Should().HaveLength(40);`. Using MSBuild alone something like that is not really possible
+with a _reasonable_ amount of effort. Generating code that can be directly referenced by user code is fortunately
+exactly what .NET Source Generators are meant for. This is why the primary functionality of this package is taking the
+form of an [incremental source generator](https://github.com/dotnet/roslyn/blob/main/docs/features/incremental-generators.cookbook.md).
+
+Every incremental source generator needs a _trigger_. Something that it can attach itself to and generate code for that
+thing or category of things in an efficient manner. For the `GitInfo` class, there is no obvious anchor point in the
+code since the _input_ for the generator is coming from outside the compilation unit and the code that is generated
+is (project-)global.
+
+One such trigger can be an [additional file](https://github.com/dotnet/roslyn/blob/main/docs/features/incremental-generators.cookbook.md#additional-file-transformation)
+that can be used to trigger source generators, but we also don't want users to have to set up a dedicated marker file
+in order to use the `GitInfo` generator. This is where the mandatory MSBuild integration comes in. MSBuild allows us to
+define such `AdditionalFiles` items without the need for the consumer to do anything, and we can _hide_ those items too.
+The additional file that we define is called "GitInfo.fingerprint.txt" and is stored somewhere in the "obj" directory.
+Having an actual file, while not strictly necessary for the source generator to work, provides some key benefits like
+proper build caching through the modification date of the file. To get that modification date, we run a variant of the
+`git describe` command in the `BeforeBuild` stage and if the output of that command, which we refer to as the
+fingerprint, changes then we update the contents of our fingerprint file which in turn triggers the source generator
+to re-generate the source code. This approach is certainly not perfect since it only detects changes to the git "state"
+when the actual `Build` target is executed, but this is probably the best we can do with reasonable effort.
+
+The source generator can be configured with a set of MSBuild properties like `GitInfoNamespace` which have to be made
+explicitly visible to the compiler infrastructure by declaring them as items of the form `<CompilerVisibleProperty Include="GitInfoNamespace" />`.
+These configuration values are then used by the generator to customize the output to some degree.
+
 ## Incremental Source Generator
 TODO
 
 ## Assembly Version Attributes
 TODO
 
-## 
+## Build Property $(Version)
 TODO
 
 # Configuration
@@ -88,7 +118,9 @@ TODO
 All the configuration happens through MSBuild properties that can be added to the project file
 
 - `<GitInfoGlobalNamespace>true</GitInfoGlobalNamespace>`
-  Defaults to `false`. When set to `false`, the generated `GitInfo` class will be added to the project's root namespace, but when set to `true` it will be added to the _global_ namespace instead.
+  Defaults to `false`. When set to `false`, the generated `GitInfo` class will be added to the namespace defined in `GitInfoNamespace`, but when set to `true` it will be added to the _global_ namespace instead.
+- `<GitInfoNamespace>My.Custom.Ns</GitInfoNamespace>`
+  Defaults to `$(RootNamespace)`. Defines the namespace declaration 
 - `<GitInfoGitBin>/usr/bin/git</GitInfoGitBin>`
   Defaults to `git`. This is the path to the `git` binary that will be used to gather the `GitInfo` details.
 - `<GitInfoUpdateVersionProp>false</GitInfoUpdateVersionProp>`
