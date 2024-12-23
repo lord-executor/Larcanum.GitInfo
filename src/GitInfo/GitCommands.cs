@@ -30,7 +30,9 @@ public class GitCommands
         };
         var process = Process.Start(procInfo)!;
         process.WaitForExit();
-        var binPath = process.StandardOutput.ReadToEnd().Trim();
+        // The windows "where" command can actually return multiple results, separated by newlines. In that case, we
+        // just take the first.
+        var binPath = (process.StandardOutput.ReadLine() ?? string.Empty).Trim();
 
         return process.ExitCode == 0
             ? (binPath, GetOutput("--version"))
