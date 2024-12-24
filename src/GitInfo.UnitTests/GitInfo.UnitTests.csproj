@@ -1,5 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
+    <!--
+        Automatic imports of package props and targets only works for NuGet package references - for project
+        references, we have to do this manually. Package props are included _before_ everything else and targets
+        are included at the end.
+    -->
+    <Import Project="../GitInfo/build/Larcanum.GitInfo.props" />
 
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
@@ -28,7 +33,6 @@
         Automatic imports of package props and targets only works for NuGet package references - for project
         references, we have to do this manually.
     -->
-    <Import Project="../GitInfo/build/Larcanum.GitInfo.props" />
     <Import Project="../GitInfo/build/Larcanum.GitInfo.targets" />
 
 </Project>

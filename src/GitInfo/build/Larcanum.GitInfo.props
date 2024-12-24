@@ -21,14 +21,6 @@
 
     <PropertyGroup>
         <GitInfoGlobalNamespace Condition="'$(GitInfoGlobalNamespace)' == ''">false</GitInfoGlobalNamespace>
-        <!--
-            There is an issue with the ordering of included props files since the $(RootNamespace) property is defined
-            in "Microsoft.NET.Sdk.props" but when the Larcanum.GitInfo package is referenced, this props file is added
-            _before_ that definition, so instead of actually using the $(RootNamespace), we use the same expression
-            that the SDK props file is using and derive it from the project name.
-        -->
-        <GitInfoNamespace Condition="'$(GitInfoNamespace)' == '' and '$(RootNamespace)' != ''">$(RootNamespace)</GitInfoNamespace>
-        <GitInfoNamespace Condition="'$(GitInfoNamespace)' == '' and '$(RootNamespace)' == ''">$(MSBuildProjectName.Replace(" ", "_"))</GitInfoNamespace>
         <GitInfoGitBin Condition="'$(GitInfoGitBin)' == ''">git</GitInfoGitBin>
         <!--
             v?(?<VERSION>(?<MAJOR>\d+)\.(?<MINOR>\d+)(?:\.(?<PATCH>\d+))?(?:[-+](?<LABEL>[\dA-Za-z\-\.]+))?)$
