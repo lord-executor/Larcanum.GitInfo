@@ -12,15 +12,23 @@
 
     <!-- NuGet Package Configuration -->
     <PropertyGroup>
-        <Version>0.8.0</Version>
+        <Version>1.0.0</Version>
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <!-- Since we don't have an actual _lib_ folder, this warning shows up which we can (hopefully) ignore -->
         <NoWarn>NU5128</NoWarn>
+        <Authors>Lukas Angerer</Authors>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <RepositoryUrl>https://github.com/lord-executor/Larcanum.GitInfo</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageProjectUrl>https://github.com/lord-executor/Larcanum.GitInfo</PackageProjectUrl>
+        <PackageTags>git;SemVer;Versioning;GitTag;GitDescribe;GitInfo;SourceGenerator</PackageTags>
+        <PackageDescription>Access git commit and tag information from C# code and MSBuild using SemVer conventions to automatically version assemblies and packages.</PackageDescription>
+        <!--
+            This sets the PrivateAssets="all" attribute on the imported package
+            See https://github.com/NuGet/Home/wiki/DevelopmentDependency-support-for-PackageReference
+        -->
+        <DevelopmentDependency>true</DevelopmentDependency>
     </PropertyGroup>
 
     <ItemGroup>
