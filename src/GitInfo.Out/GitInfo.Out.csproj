@@ -10,7 +10,6 @@
     <!-- GitInfo Settings -->
     <PropertyGroup>
         <GitInfoDebug>true</GitInfoDebug>
-        <!-- <GitInfoGitBin>C:\Users\Lukas Angerer\scoop\shims\git.exe</GitInfoGitBin> -->
     </PropertyGroup>
 
     <ItemGroup>
