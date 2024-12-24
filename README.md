@@ -1,3 +1,7 @@
+[![GitHub](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/lord-executor/Larcanum.GitInfo/blob/main/LICENSE)
+[![Build](https://github.com/lord-executor/Larcanum.GitInfo/actions/workflows/build.yaml/badge.svg)](https://github.com/lord-executor/Larcanum.GitInfo/actions/workflows/build.yaml)
+[![Nuget](https://img.shields.io/nuget/v/Larcanum.GitInfo.svg)](https://www.nuget.org/packages/Larcanum.GitInfo)
+
 # Overview
 
 `Larcanum.GitInfo` is a package that you can add to your project to get access to some basic `git` information directly
@@ -154,7 +158,7 @@ seems to be that it cannot have a _prefix_ like "v".
 If the `GitInfoUpdateVersionProp` is set to true, which is the default, then the `GitInfoVersion` target which runs
 before the `BeforeBuild` target tries to update the version property according to the following rules:
 - If the `Version` has already been set to a value _other than_ "1.0.0" by a previous step of the build process, like if the version is specified as a command line argument, then it is left as it is.
-- If a call to `git describe` returns something that matches the expected SemVer expression, then `Version` will be set to that string, exclusing a "v" prefix if present.
+- If a call to `git describe` returns something that matches the expected SemVer expression, then `Version` will be set to that string, excluding a "v" prefix if present.
 
 # Configuration
 
