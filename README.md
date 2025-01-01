@@ -37,6 +37,29 @@ If you need more features than what `Larcanum.GitInfo` provides, then you have t
 - You can use [devlooped/GitInfo](https://www.devlooped.com/GitInfo/) instead which has very similar functionality but has way more features
   - Also note that said project comes with [SponsorLink](https://github.com/devlooped#sponsorlink) which is not everybody's cup of tea
 
+# How to Use It
+
+Assuming that you already have a project with a `git` repository, all you have to do is add the package with
+```shell
+dotnet add package Larcanum.GitInfo
+```
+
+This will add the source generator and build files as a _development_ dependency, which means that it is isolated to the
+project it is added to and does not "leak" to other projects. This is what the package reference in the project file
+looks like.
+```xml
+<PackageReference Include="Larcanum.GitInfo" Version="1.0.0">
+  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+  <PrivateAssets>all</PrivateAssets>
+</PackageReference>
+```
+
+By default, the `GitInfo` class is added to the project's root namespace which in this example is "DemoProj". We can
+output the current version to the console with
+```cs
+Console.WriteLine($"Version: {DemoProj.GitInfo.Tag}");
+```
+
 # What it Looks Like
 
 The generated code looks something like the example below which is actually taken from _this_ repository. The information includes:
