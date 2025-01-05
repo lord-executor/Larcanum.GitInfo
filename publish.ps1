@@ -6,7 +6,7 @@ param(
 $packageVersion = $version -replace 'v(.*)','$1'
 
 git tag $version
-dotnet pack .\src\GitInfo\GitInfo.csproj
+dotnet pack .\src\GitInfo\GitInfo.csproj -p:Version=$packageVersion
 
 dotnet nuget push .\src\GitInfo\bin\Release\Larcanum.GitInfo.$packageVersion.nupkg -k $env:NUGET_API_KEY --source "https://api.nuget.org/v3/index.json"
 # Publishing to a local NuGet directory instead with
