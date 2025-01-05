@@ -199,3 +199,54 @@ All the configuration happens through MSBuild properties that can be added to th
   Defaults to `true`. When enabled, this will include the 3 versioning attributes `AssemblyVersion`, `AssemblyFileVersion` and `AssemblyInformationalVersion` in the generated "GitInfo.g.cs" file and disable the default "GenerateAssembly...Attribute" flags.
 - `<GitInfoDebug>true</GitInfoDebug>`
   Defaults to `false`. Enables the generation of a dedicated `GitInfo.Debug` property when set to `true` which contains all the context that the generator class had when generating the `GitInfo` class. Useful for debugging and should of course not be enabled for release builds.
+
+# Use Cases
+
+## Automated NuGet Package Release with GitHub Action
+
+Let us assume that we have a .NET library project called "DemoLib" that we want to publish on NuGet. We want to automate the publication process with GitHub actions and we want to **trigger** the process by simply pushing a tag with the version of the new release.
+
+In this example
+- The project uses .NET 9
+- The project file for the library is "src/DemoLib/DemoLib.csproj"
+- The versioning scheme for the tags uses the "v"-prefix, but that is not mandatory and easy to change.
+
+The workflow definition is stored in the file ".github/workflows/publish.yml" and would look like this.
+
+```yaml
+name: NuGet Package Release
+
+on:
+    push:
+        tags:
+            # Trigger this workflow on _tag push_ where the tag name matches the 'v*.*.*' pattern
+            # See https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#running-your-workflow-only-when-a-push-of-specific-tags-occurs
+            - 'v*.*.*'
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            # Checkout the repository
+            - name: Checkout code
+              uses: actions/checkout@v3
+
+            # Setup .NET Core SDK
+            - name: Setup .NET Core
+              uses: actions/setup-dotnet@v3
+              with:
+                  dotnet-version: 9.0.x
+
+            # Pack the project with the version that Larcanum.GitInfo extracts from git (this will match the tag)
+            - name: Pack the project
+              run: dotnet pack --configuration Release --output ./artifacts src/DemoLib/DemoLib.csproj
+
+            # Push the package to NuGet
+            - name: Push to NuGet
+              env:
+                  NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+              run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+```
+
+The NuGet authorization is handled with a NuGet access token that is configured as the `NUGET_API_KEY` secret under `https://github.com/[user]/[repository]/settings/secrets/actions`.
