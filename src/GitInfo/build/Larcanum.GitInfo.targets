@@ -72,6 +72,8 @@
             -->
             <Version Condition="'$(_GitExitCode)' == '0' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(_GitTag)', '$(GitInfoVersionRegex)'))"
                 >$([System.Text.RegularExpressions.Regex]::Replace($(_GitTag), $(GitInfoVersionRegex), "${VERSION}"))</Version>
+
+            <PackageVersion Condition="'$(PackageVersion)' == '1.0.0'">$(Version)</PackageVersion>
         </PropertyGroup>
 
         <Message Text="GitInfo updated Version to '$(Version)' based on git tag '$(_GitTag)'" Importance="normal" />
