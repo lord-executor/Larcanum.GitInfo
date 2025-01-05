@@ -13,7 +13,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Larcanum.GitInfo" Version="0.7.0" />
+      <PackageReference Include="Larcanum.GitInfo" Version="1.0.0">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
     </ItemGroup>
 
 </Project>
