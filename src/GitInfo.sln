@@ -14,6 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_global", "_global", "{EAB5
 		..\LICENSE = ..\LICENSE
 		..\README.md = ..\README.md
 		..\.github\workflows\build.yaml = ..\.github\workflows\build.yaml
+		..\global.json = ..\global.json
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitInfo.Out", "GitInfo.Out\GitInfo.Out.csproj", "{C137DB60-1C5B-40F9-B87E-74CD97922376}"

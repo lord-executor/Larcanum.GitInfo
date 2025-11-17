@@ -159,7 +159,7 @@ looking like this:
 [assembly: CompilationRelaxations(8)]
 [assembly: RuntimeCompatibility(WrapNonExceptionThrows = true)]
 [assembly: Debuggable(/*Could not decode attribute arguments.*/)]
-[assembly: TargetFramework(".NETCoreApp,Version=v9.0", FrameworkDisplayName = ".NET 9.0")]
+[assembly: TargetFramework(".NETCoreApp,Version=v10.0", FrameworkDisplayName = ".NET 10.0")]
 [assembly: AssemblyCompany("Larcanum.GitInfo.UnitTests")]
 [assembly: AssemblyConfiguration("Debug")]
 [assembly: AssemblyProduct("Larcanum.GitInfo.UnitTests")]
