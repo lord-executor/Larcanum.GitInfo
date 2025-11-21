@@ -38,4 +38,39 @@
         <GenerateAssemblyInformationalVersionAttribute Condition="'$(GitInfoGenerateAssemblyVersion)' == 'true'">false</GenerateAssemblyInformationalVersionAttribute>
         <GitInfoDebug Condition="'$(GitInfoDebug)' == ''">false</GitInfoDebug>
     </PropertyGroup>
+
+    <ItemGroup>
+        <GitInfoOutputItem Include="GitVersion">
+            <Args>--version</Args>
+            <Type>debug</Type>
+        </GitInfoOutputItem>
+        <GitInfoOutputItem Include="GitRoot">
+            <Args>rev-parse --show-toplevel</Args>
+            <Type>debug</Type>
+        </GitInfoOutputItem>
+        <GitInfoExitCodeItem Include="IsDirty">
+            <Args>diff --quiet HEAD</Args>
+            <Type>bool</Type>
+        </GitInfoExitCodeItem>
+        <GitInfoOutputItem Include="Branch">
+            <Args>rev-parse --abbrev-ref HEAD</Args>
+            <Type>string</Type>
+        </GitInfoOutputItem>
+        <GitInfoOutputItem Include="CommitShortHash">
+            <Args>rev-parse --short HEAD</Args>
+            <Type>string</Type>
+        </GitInfoOutputItem>
+        <GitInfoOutputItem Include="CommitHash">
+            <Args>rev-parse HEAD</Args>
+            <Type>string</Type>
+        </GitInfoOutputItem>
+        <GitInfoOutputItem Include="CommitDate">
+            <Args>show -s --format="%%cI"</Args>
+            <Type>string</Type>
+        </GitInfoOutputItem>
+        <GitInfoOutputItem Include="Tag">
+            <Args>describe --tags --always</Args>
+            <Type>string</Type>
+        </GitInfoOutputItem>
+    </ItemGroup>
 </Project>
