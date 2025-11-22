@@ -11,12 +11,14 @@
     <ItemGroup>
         <!--
             AdditionalFiles items can be processed by source generators and since the build process does not know if or
-            which additional files are used by which analyzer, any change to an additional file seems to trigger the
+            which additional files are used by which analyzer, any change to an additional file seems to trigger
             all source generators. This effectively ensures that if anything about the git describe result changes,
             the GitInfo code is re-generated during the build. The contents of the file are irrelevnat for the source
             generator (but NOT for the MSBuild process), but the existence of the item is not.
         -->
-        <AdditionalFiles Include="$(IntermediateOutputPath)GitInfo.fingerprint.txt" Visible="false" />
+        <AdditionalFiles Include="$(IntermediateOutputPath)GitInfo.data.txt" Visible="false" />
+        <GitInfoFingerprint Include="$(IntermediateOutputPath)GitInfo.fingerprint.txt" Visible="false" />
+        <GitInfoData Include="$(IntermediateOutputPath)GitInfo.data.txt" Visible="false" />
     </ItemGroup>
 
     <PropertyGroup>
@@ -40,37 +42,38 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <GitInfoOutputItem Include="GitVersion">
+        <GitInfoCommandItem Include="GitVersion">
             <Args>--version</Args>
             <Type>debug</Type>
-        </GitInfoOutputItem>
-        <GitInfoOutputItem Include="GitRoot">
+        </GitInfoCommandItem>
+        <GitInfoCommandItem Include="GitRoot">
             <Args>rev-parse --show-toplevel</Args>
             <Type>debug</Type>
-        </GitInfoOutputItem>
-        <GitInfoExitCodeItem Include="IsDirty">
+        </GitInfoCommandItem>
+        <GitInfoCommandItem Include="IsDirty">
             <Args>diff --quiet HEAD</Args>
+            <CommandBehavior>ExitCode</CommandBehavior>
             <Type>bool</Type>
-        </GitInfoExitCodeItem>
-        <GitInfoOutputItem Include="Branch">
+        </GitInfoCommandItem>
+        <GitInfoCommandItem Include="Branch">
             <Args>rev-parse --abbrev-ref HEAD</Args>
             <Type>string</Type>
-        </GitInfoOutputItem>
-        <GitInfoOutputItem Include="CommitShortHash">
+        </GitInfoCommandItem>
+        <GitInfoCommandItem Include="CommitShortHash">
             <Args>rev-parse --short HEAD</Args>
             <Type>string</Type>
-        </GitInfoOutputItem>
-        <GitInfoOutputItem Include="CommitHash">
+        </GitInfoCommandItem>
+        <GitInfoCommandItem Include="CommitHash">
             <Args>rev-parse HEAD</Args>
             <Type>string</Type>
-        </GitInfoOutputItem>
-        <GitInfoOutputItem Include="CommitDate">
-            <Args>show -s --format="%%cI"</Args>
+        </GitInfoCommandItem>
+        <GitInfoCommandItem Include="CommitDate">
+            <Args>show -s --format="%cI"</Args>
             <Type>string</Type>
-        </GitInfoOutputItem>
-        <GitInfoOutputItem Include="Tag">
+        </GitInfoCommandItem>
+        <GitInfoCommandItem Include="Tag">
             <Args>describe --tags --always</Args>
             <Type>string</Type>
-        </GitInfoOutputItem>
+        </GitInfoCommandItem>
     </ItemGroup>
 </Project>

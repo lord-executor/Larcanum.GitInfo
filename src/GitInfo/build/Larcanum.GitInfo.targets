@@ -9,7 +9,42 @@
         <GitInfoNamespace Condition="'$(GitInfoNamespace)' == ''">$(RootNamespace)</GitInfoNamespace>
     </PropertyGroup>
 
-    <Target Name="GitInfoFingerprintFile" BeforeTargets="BeforeBuild">
+    <Target Name="GitInfoCheckBinary">
+        <PropertyGroup>
+            <GitIsPath Condition="$(GitInfoGitBin.Contains('\')) OR $(GitInfoGitBin.Contains('/'))">true</GitIsPath>
+            <LookupCmd Condition="'$(OS)' == 'Windows_NT'">where</LookupCmd>
+            <LookupCmd Condition="'$(OS)' != 'Windows_NT'">which</LookupCmd>
+        </PropertyGroup>
+
+        <Error Condition="'$(GitIsPath)' == 'true' AND !Exists('$(GitInfoGitBin)')"
+               Text="Git binary path '$(GitInfoGitBin)' does not exist." />
+
+        <Exec Condition="'$(GitIsPath)' != 'true'"
+              Command="$(LookupCmd) $(GitInfoGitBin)"
+              EchoOff="true"
+              ConsoleToMsBuild="true"
+              StandardOutputImportance="low"
+              IgnoreExitCode="true">
+            <Output TaskParameter="ConsoleOutput" ItemName="_GitInfoGitBinResolved" />
+            <Output TaskParameter="ExitCode" PropertyName="_GitLookupExitCode" />
+        </Exec>
+
+        <Error Condition="'$(GitIsPath)' != 'true' AND ('$(_GitLookupExitCode)' != '0' OR '%(_GitInfoGitBinResolved.Identity)' == '')"
+               Text="Could not locate git ('$(GitInfoGitBin)'). Not found on PATH." />
+
+        <ItemGroup>
+            <GitInfoDataLine Condition="'$(GitIsPath)' == 'true'" Include="GitPath|debug|$(GitInfoGitBin)" />
+            <!--
+                Note that on Windows, the 'where' command can return multiple results, separated by newlines.
+                We always take the first match here with "%".
+            -->
+            <GitInfoDataLine Condition="'$(GitIsPath)' != 'true'" Include="GitPath|debug|%(_GitInfoGitBinResolved.Identity)" />
+        </ItemGroup>
+
+        <Message Text="GitInfoCheckBinary %(GitInfoDataLine.Identity)" Importance="normal" />
+    </Target>
+
+    <Target Name="GitInfoFingerprintFile" DependsOnTargets="GitInfoCheckBinary">
         <!--
             This target creates a "GitInfo.fingerprint.txt" with the last output of the following git command
             which serves as a fingerprint to detect when the GitInfo class should be re-generated during the build.
@@ -39,91 +74,28 @@
                 Lines="$(_GitFingerprint)"
                 Overwrite="true"
                 WriteOnlyWhenDifferent="true" />
+
+        <Message Text="GitInfoFingerprintFile $(_GitFingerprint)" Importance="normal" />
     </Target>
 
-    <Target Name="GitInfoCheckBinary">
-        <PropertyGroup>
-            <GitIsPath Condition="$(GitInfoGitBin.Contains('\')) OR $(GitInfoGitBin.Contains('/'))">true</GitIsPath>
-            <LookupCmd Condition="'$(OS)' == 'Windows_NT'">where</LookupCmd>
-            <LookupCmd Condition="'$(OS)' != 'Windows_NT'">which</LookupCmd>
-        </PropertyGroup>
-
-        <Error Condition="'$(GitIsPath)' == 'true' AND !Exists('$(GitInfoGitBin)')"
-               Text="Git binary path '$(GitInfoGitBin)' does not exist." />
-
-        <Exec Condition="'$(GitIsPath)' != 'true'"
-              Command="$(LookupCmd) $(GitInfoGitBin)"
-              EchoOff="true"
-              ConsoleToMsBuild="true"
-              StandardOutputImportance="low"
-              IgnoreExitCode="true">
-            <Output TaskParameter="ConsoleOutput" ItemName="GitInfoGitBinResolved" />
-            <Output TaskParameter="ExitCode" PropertyName="GitLookupExitCode" />
-        </Exec>
-
-        <Error Condition="'$(GitIsPath)' != 'true' AND ('$(GitLookupExitCode)' != '0' OR '%(GitInfoGitBinResolved.Identity)' == '')"
-               Text="Could not locate git ('$(GitInfoGitBin)'). Not found on PATH." />
+    <Target Name="GitInfoCollect" BeforeTargets="BeforeBuild" DependsOnTargets="GitInfoFingerprintFile" Inputs="@(GitInfoFingerprint)" Outputs="@(GitInfoFingerprint -> '%(RelativeDir)GitInfo.data.txt')">
+        <RunGitCommand Input="@(GitInfoCommandItem)"
+                       GitBin="$(GitInfoGitBin)"
+                       WorkingDir="$(ProjectDir)">
+            <Output TaskParameter="Result" ItemName="_GitInfoDataItem" />
+        </RunGitCommand>
 
         <ItemGroup>
-            <GitInfoDataLine Condition="'$(GitIsPath)' == 'true'" Include="GitPath|debug|$(GitInfoGitBin)" />
-            <!--
-                Note that on Windows, the 'where' command can return multiple results, separated by newlines.
-                We always take the first match here with "%".
-            -->
-            <GitInfoDataLine Condition="'$(GitIsPath)' != 'true'" Include="GitPath|debug|%(GitInfoGitBinResolved.Identity)" />
-        </ItemGroup>
-    </Target>
-
-    <Target Name="GitInfoCollect" BeforeTargets="BeforeBuild" DependsOnTargets="GitInfoCheckBinary">
-
-        <Exec Command="$(GitInfoGitBin) %(GitInfoOutputItem.Args)"
-              EchoOff="true"
-              ConsoleToMsBuild="true"
-              StdOutEncoding="utf-8"
-              StandardOutputImportance="low"
-              WorkingDirectory="$(ProjectDir)">
-            <Output TaskParameter="ConsoleOutput" ItemName="_GitInfoOutputItemOutput"/>
-        </Exec>
-
-        <MergeWithOutput
-                Input="@(GitInfoOutputItem)"
-                Values="@(_GitInfoOutputItemOutput)">
-            <Output TaskParameter="Result" ItemName="_GitInfoOutputItemResult" />
-        </MergeWithOutput>
-
-        <ItemGroup>
-            <GitInfoDataLine Include="%(_GitInfoOutputItemResult.Identity)|%(_GitInfoOutputItemResult.Type)|%(_GitInfoOutputItemResult.Data)" />
-        </ItemGroup>
-
-        <!--
-            We set "IgnoreExitCode" so that we can convert exit codes into booleans - e.g. diff __quiet HEAD
-        -->
-        <Exec Command="$(GitInfoGitBin) %(GitInfoExitCodeItem.Args)"
-              EchoOff="true"
-              ConsoleToMsBuild="true"
-              IgnoreExitCode="true"
-              StdOutEncoding="utf-8"
-              StandardOutputImportance="low"
-              WorkingDirectory="$(ProjectDir)">
-            <Output TaskParameter="ExitCode" ItemName="_GitInfoExitCodeItemExitCode"/>
-        </Exec>
-
-        <MergeWithOutput
-                Input="@(GitInfoExitCodeItem)"
-                Values="@(_GitInfoExitCodeItemExitCode)">
-            <Output TaskParameter="Result" ItemName="_GitInfoExitCodeItemResult" />
-        </MergeWithOutput>
-
-        <ItemGroup>
-            <GitInfoDataLine Condition="'%(_GitInfoExitCodeItemResult.Data)' == ''" Include="%(_GitInfoExitCodeItemResult.Identity)|%(_GitInfoExitCodeItemResult.Type)|false" />
-            <GitInfoDataLine Condition="'%(_GitInfoExitCodeItemResult.Data)' != ''" Include="%(_GitInfoExitCodeItemResult.Identity)|%(_GitInfoExitCodeItemResult.Type)|true" />
+            <GitInfoDataLine Include="%(_GitInfoDataItem.Identity)|%(_GitInfoDataItem.Type)|%(_GitInfoDataItem.Data)" />
         </ItemGroup>
 
         <WriteLinesToFile
-                File="$(IntermediateOutputPath)GitInfo.data.txt"
+                File="@(GitInfoFingerprint -> '%(RelativeDir)GitInfo.data.txt')"
                 Lines="@(GitInfoDataLine)"
                 Overwrite="true"
                 WriteOnlyWhenDifferent="true" />
+
+        <Message Text="@(GitInfoFingerprint -> '%(RelativeDir)GitInfo.data.txt')" Importance="normal" />
     </Target>
 
     <Target Name="GitInfoVersion" BeforeTargets="BeforeBuild" Condition="'$(Version)' == '1.0.0' and '$(GitInfoUpdateVersionProp)' == 'true'">
@@ -165,33 +137,54 @@
     </Target>
 
     <UsingTask
-            TaskName="MergeWithOutput"
+            TaskName="RunGitCommand"
             TaskFactory="RoslynCodeTaskFactory"
             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
 
         <ParameterGroup>
+            <GitBin ParameterType="System.String" Required="true" />
+            <WorkingDir ParameterType="System.String" Required="true" />
             <Input ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
-            <Values ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
             <Result ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
         </ParameterGroup>
 
         <Task>
             <Using Namespace="System" />
-            <Using Namespace="System.Collections.Generic" />
+            <Using Namespace="System.Diagnostics" />
             <Using Namespace="Microsoft.Build.Framework" />
             <Using Namespace="Microsoft.Build.Utilities" />
 
             <Code Type="Fragment" Language="cs"><![CDATA[
-                    int count = Math.Min(Input.Length, Values.Length);
+            foreach (var item in Input)
+            {
+                var procInfo = new ProcessStartInfo
+                {
+                    FileName = GitBin,
+                    WorkingDirectory = WorkingDir,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    Arguments = item.GetMetadata("Args"),
+                };
 
-                    for (int i = 0; i < count; i++)
-                    {
-                        Input[i].SetMetadata("Data", Values[i].ItemSpec);
-                    }
+                var process = Process.Start(procInfo)!;
+                process.WaitForExit();
 
-                    Result = Input;
-                ]]>
-            </Code>
+                if (item.GetMetadata("CommandBehavior") == "ExitCode")
+                {
+                    item.SetMetadata("Data", process.ExitCode == 0 ? "true" : "false");
+                }
+                else
+                {
+                    item.SetMetadata("Data", process.ExitCode == 0
+                        ? process.StandardOutput.ReadToEnd().Trim()
+                        : process.StandardError.ReadToEnd().Trim());
+                }
+            }
+
+            Result = Input;
+            ]]></Code>
         </Task>
     </UsingTask>
 </Project>
