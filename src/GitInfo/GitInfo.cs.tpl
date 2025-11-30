@@ -9,17 +9,5 @@ $(Namespace)
 /// <summary>Provides access to the git information for the current assembly.</summary>
 internal partial class GitInfo
 {
-    public const bool IsDirty = $(GitIsDirty);
-
-    public const string Branch = @"$(GitBranch)";
-
-    public const string CommitShortHash = @"$(GitCommitShortHash)";
-
-    public const string CommitHash = @"$(GitCommitHash)";
-
-    public const string CommitDate = @"$(GitCommitDate)";
-
-    public const string Tag = @"$(GitTag)";
-
-    public const string DotNetVersion = @"$(DotNetVersion)";
+$(Constants)
 }
