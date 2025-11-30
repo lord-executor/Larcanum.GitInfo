@@ -13,8 +13,8 @@
             AdditionalFiles items can be processed by source generators and since the build process does not know if or
             which additional files are used by which analyzer, any change to an additional file seems to trigger
             all source generators. This effectively ensures that if anything about the git describe result changes,
-            the GitInfo code is re-generated during the build. The contents of the file are irrelevnat for the source
-            generator (but NOT for the MSBuild process), but the existence of the item is not.
+            the GitInfo code is re-generated during the build. The file contains the information gathered through
+            the GitInfoCommandItem collection and provides the basis for the generated GitInfo constants.
         -->
         <AdditionalFiles Include="$(IntermediateOutputPath)GitInfo.data.txt" Visible="false" />
         <GitInfoFingerprint Include="$(IntermediateOutputPath)GitInfo.fingerprint.txt" Visible="false" />

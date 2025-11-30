@@ -10,6 +10,11 @@
     </PropertyGroup>
 
     <Target Name="GitInfoCheckBinary">
+        <!--
+            Checks if the $(GitInfoGitBin) can be resolved to an actual binary and generates the _first_ GitInfoDataLine
+            which contains the path the the resolved git binary. If the git binary cannot be found, this generates
+            an error.
+        -->
         <PropertyGroup>
             <GitIsPath Condition="$(GitInfoGitBin.Contains('\')) OR $(GitInfoGitBin.Contains('/'))">true</GitIsPath>
             <LookupCmd Condition="'$(OS)' == 'Windows_NT'">where</LookupCmd>
@@ -79,6 +84,12 @@
     </Target>
 
     <Target Name="GitInfoCollect" BeforeTargets="BeforeBuild" DependsOnTargets="GitInfoFingerprintFile" Inputs="@(GitInfoFingerprint)" Outputs="@(GitInfoFingerprint -> '%(RelativeDir)GitInfo.data.txt')">
+        <!--
+            This target collects the actual git information that is used to eventually generate the source file for GitInfo.
+            It does this by running the git command with each GitInfoCommandItem->Args and attaching the output of that
+            command to the item itself. After that, it generates GitInfoDataLine items of the form "Name|Type|Value" for
+            each of the GitInfoCommandItem values and writes all of those items to the GitInfo.data.txt file.
+        -->
         <RunGitCommand Input="@(GitInfoCommandItem)"
                        GitBin="$(GitInfoGitBin)"
                        WorkingDir="$(ProjectDir)">
@@ -140,7 +151,12 @@
             TaskName="RunGitCommand"
             TaskFactory="RoslynCodeTaskFactory"
             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
-
+        <!--
+            Running a command and associating its output with an item is not something that can be easily done with
+            built-in MSBuild tasks, so we do this with a custom UsingTask. The code is very simple and just runs
+            the _GitBin_ command with the arguments from the _Input_ in the given _WorkingDir_ and returns a set of
+            items that match the _Input_ but with the additional "Data" metadata containing the command output.
+        -->
         <ParameterGroup>
             <GitBin ParameterType="System.String" Required="true" />
             <WorkingDir ParameterType="System.String" Required="true" />
