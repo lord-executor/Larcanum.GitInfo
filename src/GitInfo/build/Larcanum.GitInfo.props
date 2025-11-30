@@ -52,7 +52,7 @@
         </GitInfoCommandItem>
         <GitInfoCommandItem Include="IsDirty">
             <Args>diff --quiet HEAD</Args>
-            <CommandBehavior>ExitCode</CommandBehavior>
+            <CommandBehavior>ExitCodeInverted</CommandBehavior>
             <Type>bool</Type>
         </GitInfoCommandItem>
         <GitInfoCommandItem Include="Branch">

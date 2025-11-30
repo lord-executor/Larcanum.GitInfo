@@ -191,6 +191,10 @@
                 {
                     item.SetMetadata("Data", process.ExitCode == 0 ? "true" : "false");
                 }
+                else if (item.GetMetadata("CommandBehavior") == "ExitCodeInverted")
+                {
+                    item.SetMetadata("Data", process.ExitCode == 0 ? "false" : "true");
+                }
                 else
                 {
                     item.SetMetadata("Data", process.ExitCode == 0
