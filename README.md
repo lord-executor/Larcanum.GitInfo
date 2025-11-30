@@ -19,7 +19,7 @@ relatively strong assumptions.
 
 - The code is C#, using language version 10 or above
   - VB support could be added in the future if somebody needs that
-- The .NET Framework version being used is reasonable new (.NET 6+ should do it)
+- The .NET Framework version being used is reasonably new (.NET 6+ should do it)
 - The `git` binary is present in the `PATH`
   - This can be configured manually, but by default it assumes that `git` is in the PATH and there is no attempt at discovering other locations
 - The target project is using [Semantic Versioning](https://semver.org/)
@@ -69,32 +69,33 @@ The generated code looks something like the example below which is actually take
 - A version string that is compatible with the .NET `Version` class and is derived from the tag description.
 
 **NOTE:** If you are looking at the generated source file in your IDE, it _may_ not be 100% up to date since IDEs like
-VisualStudio and Rider try to do some "shortcuts" to optimize the build process which means that the `GitInfoFingerprintFile`
-target is not always triggered. This should NOT matter, however since any proper `dotnet build` or packing or publishing
-will include that target and thus the `GitInfo` class that is actually part of the final assembly will be up to date.
+VisualStudio and Rider try to do some "shortcuts" to optimize the build process which means that the `GitInfo.data.txt`
+is not always generated when it should be. This should NOT matter, however since any proper `dotnet build` or packing
+or publishing will run all targets and thus the `GitInfo` class that is actually part of the final assembly will be up to date.
 
 ```cs
-[assembly: System.Reflection.AssemblyVersion("0.5.0")]
-[assembly: System.Reflection.AssemblyFileVersion("0.5.0")]
-[assembly: System.Reflection.AssemblyInformationalVersion("v0.5.0")]
+[assembly: System.Reflection.AssemblyVersion("1.2.0.5")]
+[assembly: System.Reflection.AssemblyFileVersion("1.2.0.5")]
+[assembly: System.Reflection.AssemblyInformationalVersion("v1.2.0-5-g627b708")]
 
 namespace Larcanum.GitInfo.UnitTests;
 
-public partial class GitInfo
+/// <summary>Provides access to the git information for the current assembly.</summary>
+internal partial class GitInfo
 {
-    public const bool IsDirty = true;
+    public const bool IsDirty = false;
 
-    public const string Branch = @"main";
+    public const string Branch = @"feature/move-git-commands-to-msbuild";
 
-    public const string CommitShortHash = @"a777e94";
+    public const string CommitShortHash = @"627b708";
 
-    public const string CommitHash = @"a777e94677cbe32c3d2d1c1582ecdbf75ac159f8";
+    public const string CommitHash = @"627b708573641095f8cbd2c1b38bf165651b910a";
 
-    public const string CommitDate = @"2024-12-23T11:54:14+01:00";
+    public const string CommitDate = @"2025-11-30T12:46:35+01:00";
 
-    public const string Tag = @"v0.5.0";
+    public const string Tag = @"v1.2.0-5-g627b708";
 
-    public const string DotNetVersion = @"0.5.0";
+    public const string DotNetVersion = @"1.2.0.5";
 }
 ```
 
@@ -122,11 +123,12 @@ One such trigger can be an [additional file](https://github.com/dotnet/roslyn/bl
 that can be used to trigger source generators, but we also don't want users to have to set up a dedicated marker file
 in order to use the `GitInfo` generator. This is where the mandatory MSBuild integration comes in. MSBuild allows us to
 define such `AdditionalFiles` items without the need for the consumer to do anything, and we can _hide_ those items too.
-The additional file that we define is called "GitInfo.fingerprint.txt" and is stored somewhere in the "obj" directory.
+The additional file that we define is called "GitInfo.data.txt" and is stored somewhere in the "obj" directory.
 Having an actual file, while not strictly necessary for the source generator to work, provides some key benefits like
 proper build caching through the modification date of the file. To get that modification date, we run a variant of the
 `git describe` command in the `BeforeBuild` stage and if the output of that command, which we refer to as the
-fingerprint, changes then we update the contents of our fingerprint file which in turn triggers the source generator
+fingerprint, changes then we update the contents of our fingerprint file which in turn triggers the `GitInfoCollect`
+target that runs multiple `git` commands and generates the "GitInfo.data.txt" file used by the source generator
 to re-generate the source code. This approach is certainly not perfect since it only detects changes to the git "state"
 when the actual `Build` target is executed, but this is probably the best we can do with reasonable effort.
 
@@ -230,13 +232,13 @@ jobs:
         steps:
             # Checkout the repository
             - name: Checkout code
-              uses: actions/checkout@v3
+              uses: actions/checkout@v5
 
             # Setup .NET Core SDK
             - name: Setup .NET Core
-              uses: actions/setup-dotnet@v3
+              uses: actions/setup-dotnet@v5
               with:
-                  dotnet-version: 9.0.x
+                  dotnet-version: 10.0.x
 
             # Pack the project with the version that Larcanum.GitInfo extracts from git (this will match the tag)
             - name: Pack the project
