@@ -17,7 +17,7 @@ public class GitInfoGenerator : IIncrementalGenerator
     /// </summary>
     private static readonly Regex PlaceholderRegex = new Regex(@"\$\((.*?)\)", RegexOptions.Compiled);
     /// <summary>
-    /// The "git describe" format is roughly "[tag]-[additiona-commits]-g[short-hash]" as explained in
+    /// The "git describe" format is roughly "[tag]-[additional-commits]-g[short-hash]" as explained in
     /// https://git-scm.com/docs/git-describe - we extract the number of commits and use that as the _revision_
     /// for .NET versions.
     /// e.g. "v1.0.4-14-g2414721" is 14 commits ahead of v1.0.4 with a hash of 2414721
@@ -28,6 +28,22 @@ public class GitInfoGenerator : IIncrementalGenerator
     {
         var configProvider = context.AnalyzerConfigOptionsProvider.Select(static (options, _) =>
             GitInfoConfig.FromOptions(options.GlobalOptions));
+
+        context.RegisterPostInitializationOutput(piCtx =>
+        {
+            var config = new GitInfoConfig();
+            List<PropConfig> items =
+            [
+                new PropConfig() { Name = "IsDirty", Type = "bool", Value = "true" },
+                new PropConfig() { Name = "Branch", Type = "string", Value = "run-a-full-build-to-get-the-values-from-git" },
+                new PropConfig() { Name = "CommitShortHash", Type = "string", Value = "unknown" },
+                new PropConfig() { Name = "CommitHash", Type = "string", Value = "unknown" },
+                new PropConfig() { Name = "CommitDate", Type = "string", Value = "" },
+                new PropConfig() { Name = "Tag", Type = "string", Value = "v1.0.0" },
+            ];
+
+            GenerateCode(piCtx.AddSource, config, items);
+        });
 
         // Using the "GitInfo.data.txt" from the intermediate output directory (obj) as the input and
         // trigger for the pipeline ensures that the code generation is triggered whenever that file changes.
@@ -53,60 +69,65 @@ public class GitInfoGenerator : IIncrementalGenerator
                         };
                     }).ToList() ?? [];
 
-                var generatorContext = config.ToDictionary();
-                foreach (var item in items.Where(x => x.Type == DebugType))
-                {
-                    generatorContext[item.Name] = item.Value;
-                }
-
-                // Parse the 'Tag' and convert it to a valid .NET version string
-                var tagItem = items.FirstOrDefault(x => x.Name == "Tag")
-                    ?? throw new Exception("'Tag' item is required");
-                var version = ParseVersion(tagItem.Value, config);
-                items.Add(new PropConfig() { Name = "DotNetVersion", Type = "string", Value = version.ToString(), });
-
-                var classNamespace = config.GitInfoGlobalNamespace || string.IsNullOrWhiteSpace(config.GitInfoNamespace)
-                    ? string.Empty
-                    : $"namespace {config.GitInfoNamespace};";
-
-                var values = new Dictionary<string, string>
-                {
-                    ["Context"] = ContextToComment(generatorContext),
-                    ["Namespace"] = classNamespace,
-                    ["Constants"] = string.Join("\n\n", items.Where(x => x.Type != DebugType)
-                        .Select(x => x.Type switch
-                        {
-                            "string" => $"    public const {x.Type} {x.Name} = @\"{x.Value}\";",
-                            _ => $"    public const {x.Type} {x.Name} = {x.Value};"
-                        })),
-                };
-
-                var versionAttributesWriter = new StringWriter();
-                if (config.GitInfoGenerateAssemblyVersion)
-                {
-                    versionAttributesWriter.WriteLine($"[assembly: System.Reflection.AssemblyVersion(\"{version}\")]");
-                    versionAttributesWriter.WriteLine($"[assembly: System.Reflection.AssemblyFileVersion(\"{version}\")]");
-                    // AssemblyVersion & AssemblyFileVersion have to be .NET compatible version strings
-                    // of the form Major.Minor.Build.Revision but the AssemblyInformationalVersion is free-form, so
-                    // we use the original git tag description.
-                    versionAttributesWriter.WriteLine($"[assembly: System.Reflection.AssemblyInformationalVersion(\"{tagItem.Value}\")]");
-                }
-
-                values["VersionAttributes"] = versionAttributesWriter.ToString();
-
-                ctx.AddSource("GitInfo.g.cs", BuildSourceText("GitInfo.cs.tpl", values));
-
-                if (config.GitInfoDebug)
-                {
-                    ctx.AddSource("GitInfo.Debug.g.cs",
-                        BuildSourceText("GitInfo.Debug.cs.tpl",
-                            new Dictionary<string, string>
-                            {
-                                ["Namespace"] = classNamespace,
-                                ["DebugProps"] = ContextToAnonProps(generatorContext)
-                            }));
-                }
+                GenerateCode(ctx.AddSource, config, items);
             });
+    }
+
+    private static void GenerateCode(Action<string, SourceText> addSource, GitInfoConfig config, IList<PropConfig> items)
+    {
+        var generatorContext = config.ToDictionary();
+        foreach (var item in items.Where(x => x.Type == DebugType))
+        {
+            generatorContext[item.Name] = item.Value;
+        }
+
+        // Parse the 'Tag' and convert it to a valid .NET version string
+        var tagItem = items.FirstOrDefault(x => x.Name == "Tag")
+                      ?? throw new Exception("'Tag' item is required");
+        var version = ParseVersion(tagItem.Value, config);
+        items.Add(new PropConfig() { Name = "DotNetVersion", Type = "string", Value = version.ToString(), });
+
+        var classNamespace = config.GitInfoGlobalNamespace || string.IsNullOrWhiteSpace(config.GitInfoNamespace)
+            ? string.Empty
+            : $"namespace {config.GitInfoNamespace};";
+
+        var values = new Dictionary<string, string>
+        {
+            ["Context"] = ContextToComment(generatorContext),
+            ["Namespace"] = classNamespace,
+            ["Constants"] = string.Join("\n\n", items.Where(x => x.Type != DebugType)
+                .Select(x => x.Type switch
+                {
+                    "string" => $"    public const {x.Type} {x.Name} = @\"{x.Value}\";",
+                    _ => $"    public const {x.Type} {x.Name} = {x.Value};"
+                })),
+        };
+
+        var versionAttributesWriter = new StringWriter();
+        if (config.GitInfoGenerateAssemblyVersion)
+        {
+            versionAttributesWriter.WriteLine($"[assembly: System.Reflection.AssemblyVersion(\"{version}\")]");
+            versionAttributesWriter.WriteLine($"[assembly: System.Reflection.AssemblyFileVersion(\"{version}\")]");
+            // AssemblyVersion & AssemblyFileVersion have to be .NET compatible version strings
+            // of the form Major.Minor.Build.Revision but the AssemblyInformationalVersion is free-form, so
+            // we use the original git tag description.
+            versionAttributesWriter.WriteLine(
+                $"[assembly: System.Reflection.AssemblyInformationalVersion(\"{tagItem.Value}\")]");
+        }
+
+        values["VersionAttributes"] = versionAttributesWriter.ToString();
+
+        addSource("GitInfo.g.cs", BuildSourceText("GitInfo.cs.tpl", values));
+
+        if (config.GitInfoDebug)
+        {
+            addSource("GitInfo.Debug.g.cs",
+                BuildSourceText("GitInfo.Debug.cs.tpl",
+                    new Dictionary<string, string>
+                    {
+                        ["Namespace"] = classNamespace, ["DebugProps"] = ContextToAnonProps(generatorContext)
+                    }));
+        }
     }
 
     private static Version ParseVersion(string tag, GitInfoConfig config)

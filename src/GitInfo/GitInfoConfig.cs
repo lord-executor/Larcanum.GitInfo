@@ -15,7 +15,7 @@ public record GitInfoConfig
     public string GitInfoNamespace { get; set; } = string.Empty;
     public bool GitInfoGlobalNamespace { get; set; }
     public string GitInfoGitBin { get; set; } = string.Empty;
-    public Regex GitInfoVersionRegex { get; set; } = new Regex("");
+    public Regex GitInfoVersionRegex { get; set; } = new Regex(@"v?(?<VERSION>(?<MAJOR>\d+)\.(?<MINOR>\d+)(?:\.(?<PATCH>\d+))?(?:[-+](?<LABEL>[\dA-Za-z\-\.]+))?)$");
     public bool GitInfoGenerateAssemblyVersion { get; set; }
     public bool GitInfoDebug { get; set; }
 
