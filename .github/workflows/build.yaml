@@ -6,6 +6,13 @@ on:
     pull_request:
         branches: [ "main" ]
 
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+permissions:
+    contents: read
+
 env:
     SOLUTION_FILE: src/GitInfo.slnx
 
@@ -28,11 +35,15 @@ jobs:
             -   name: Setup .NET
                 uses: actions/setup-dotnet@v5
                 with:
-                    dotnet-version: 10.0.x
+                    global-json-file: global.json
+                    cache: true
+                    cache-dependency-path: src/**/*.csproj
             -   name: Restore dependencies
                 run: dotnet restore $SOLUTION_FILE
             -   name: Build
                 run: dotnet build --no-restore $SOLUTION_FILE
+            -   name: Verify formatting
+                run: dotnet format --no-restore $SOLUTION_FILE --verify-no-changes --verbosity diagnostic
             -   name: Test
                 run: dotnet test --no-build --verbosity normal --solution $SOLUTION_FILE
             -   name: Run GitInfo.Out

@@ -1,4 +1,4 @@
-﻿namespace Larcanum.GitInfo;
+namespace Larcanum.GitInfo;
 
 public record PropConfig
 {

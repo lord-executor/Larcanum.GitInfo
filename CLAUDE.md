@@ -18,6 +18,7 @@ Match the CI sequence in `.github/workflows/build.yaml` exactly — the final st
 ```
 dotnet restore src/GitInfo.slnx
 dotnet build --no-restore src/GitInfo.slnx
+dotnet format --no-restore src/GitInfo.slnx --verify-no-changes --verbosity diagnostic
 dotnet test --no-build --verbosity normal --solution src/GitInfo.slnx
 dotnet run --no-build --project src/GitInfo.Out/GitInfo.Out.csproj
 ```

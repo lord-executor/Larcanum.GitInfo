@@ -1,11 +1,11 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Text.Json;
 
 namespace GitInfo.Out;
 
 internal static class Program
 {
-    private static readonly JsonSerializerOptions Options = new JsonSerializerOptions() { WriteIndented = true};
+    private static readonly JsonSerializerOptions Options = new JsonSerializerOptions() { WriteIndented = true };
 
     public static void Main(string[] args)
     {
