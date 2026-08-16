@@ -17,7 +17,7 @@ public class GitInfoGenerator : IIncrementalGenerator
     /// </summary>
     private static readonly Regex PlaceholderRegex = new Regex(@"\$\((.*?)\)", RegexOptions.Compiled);
     /// <summary>
-    /// The "git describe" format is roughly "[tag]-[additiona-commits]-g[short-hash]" as explained in
+    /// The "git describe" format is roughly "[tag]-[additional-commits]-g[short-hash]" as explained in
     /// https://git-scm.com/docs/git-describe - we extract the number of commits and use that as the _revision_
     /// for .NET versions.
     /// e.g. "v1.0.4-14-g2414721" is 14 commits ahead of v1.0.4 with a hash of 2414721
@@ -39,6 +39,18 @@ public class GitInfoGenerator : IIncrementalGenerator
             static (ctx, input) =>
             {
                 var (dataSource, config) = input;
+
+                if (dataSource?.Length == 0)
+                {
+                    DiagnosticDescriptor descriptor = new DiagnosticDescriptor(
+                        id: "EmptyDataFile",
+                        title: "Empty GitInfo.data.txt file",
+                        messageFormat: "The generated GitInfo.data.txt is empty. This indicates an issue with running the git commands.",
+                        defaultSeverity: DiagnosticSeverity.Warning,
+                        isEnabledByDefault: true,
+                        category: "Default");
+                    ctx.ReportDiagnostic(Diagnostic.Create(descriptor, Location.None));
+                }
 
                 // each line has this form: "Tag|string|v1.2.0-4-g45a45eb"
                 var items = dataSource?.ToString().Split(['\n', '\r'], StringSplitOptions.RemoveEmptyEntries)
