@@ -38,13 +38,18 @@ jobs:
                     global-json-file: global.json
                     cache: true
                     cache-dependency-path: src/**/*.csproj
+
             -   name: Restore dependencies
                 run: dotnet restore $SOLUTION_FILE
+
             -   name: Build
                 run: dotnet build --no-restore $SOLUTION_FILE
+
             -   name: Verify formatting
                 run: dotnet format --no-restore $SOLUTION_FILE --verify-no-changes --verbosity diagnostic
+
             -   name: Test
                 run: dotnet test --no-build --verbosity normal --solution $SOLUTION_FILE
+
             -   name: Run GitInfo.Out
                 run: dotnet run --no-build --project src/GitInfo.Out/GitInfo.Out.csproj

@@ -37,7 +37,7 @@ dotnet run --no-build --project src/GitInfo.Out/GitInfo.Out.csproj
 
 ## Release process
 
-`publish.ps1` at repo root: takes a `-version` param, runs `git tag $version`, `dotnet pack src\GitInfo\GitInfo.csproj -p:Version=$packageVersion`, then `dotnet nuget push` to nuget.org using `$env:NUGET_API_KEY`. This creates a real git tag and publishes to the public NuGet feed — do not run it without explicit user confirmation. After a release, `src/GitInfo.Out/GitInfo.Out.csproj`'s `PackageReference` version should be bumped to match.
+Publishing is fully automated by `.github/workflows/publish.yaml`, triggered by pushing a tag matching `v*.*.*` (e.g. `v1.4.0`). The workflow runs the full verify sequence, packs `src/GitInfo/GitInfo.csproj`, and pushes to nuget.org using Trusted Publishing (OIDC, no stored API key). See the `release` skill for the exact steps. Pushing a release tag publishes to the public NuGet feed immediately — do not push one without explicit user confirmation. After a release, `src/GitInfo.Out/GitInfo.Out.csproj`'s `PackageReference` version should be bumped to match.
 
 ## Code style (`.editorconfig`)
 
