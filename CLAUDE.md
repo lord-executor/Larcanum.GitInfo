@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `Larcanum.GitInfo` is a Roslyn incremental source generator, packaged as a NuGet package, that generates a `GitInfo` class exposing git commit/tag/version info (`IsDirty`, `Branch`, `CommitShortHash`, `CommitHash`, `CommitDate`, `Tag`, `DotNetVersion`) into consuming projects. It also drives assembly versioning via MSBuild properties derived from `git describe`.
 
-Solution: `src/GitInfo.sln`, containing three projects:
+Solution: `src/GitInfo.slnx`, containing three projects:
 - `src/GitInfo/` — the generator itself (`Larcanum.GitInfo`, netstandard2.0). Packs `build/Larcanum.GitInfo.props`/`.targets` and the compiled analyzer DLL into the NuGet package.
 - `src/GitInfo.Out/` — a demo/smoke-test console app (net10.0) that consumes the generator via a real `PackageReference` (currently pinned to a specific published version — bump it after each release).
 - `src/GitInfo.UnitTests/` — unit tests (net10.0, TUnit + AwesomeAssertions). References the generator via `ProjectReference` with `OutputItemType="Analyzer"`, and therefore has to **manually** `<Import>` `build/Larcanum.GitInfo.props` (top) and `.targets` (bottom) in its `.csproj` — package-based auto-import doesn't apply to project references.
@@ -16,9 +16,9 @@ Solution: `src/GitInfo.sln`, containing three projects:
 Match the CI sequence in `.github/workflows/build.yaml` exactly — the final step is a real smoke test, not optional:
 
 ```
-dotnet restore src/GitInfo.sln
-dotnet build --no-restore src/GitInfo.sln
-dotnet test --no-build --verbosity normal --solution src/GitInfo.sln
+dotnet restore src/GitInfo.slnx
+dotnet build --no-restore src/GitInfo.slnx
+dotnet test --no-build --verbosity normal --solution src/GitInfo.slnx
 dotnet run --no-build --project src/GitInfo.Out/GitInfo.Out.csproj
 ```
 

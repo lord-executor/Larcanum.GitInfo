@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/_global/">
+    <File Path="../.editorconfig" />
+    <File Path="../.github/workflows/build.yaml" />
+    <File Path="../.gitignore" />
+    <File Path="../global.json" />
+    <File Path="../LICENSE" />
+    <File Path="../README.md" />
+  </Folder>
+  <Project Path="GitInfo.Out/GitInfo.Out.csproj" />
+  <Project Path="GitInfo.UnitTests/GitInfo.UnitTests.csproj" />
+  <Project Path="GitInfo/GitInfo.csproj" />
+</Solution>

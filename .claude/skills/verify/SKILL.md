@@ -6,9 +6,9 @@ description: Build, test, and smoke-test the GitInfo solution using the same seq
 Run these commands in order from the repo root, matching `.github/workflows/build.yaml` exactly. Stop and report if any step fails — do not skip ahead.
 
 ```
-dotnet restore src/GitInfo.sln
-dotnet build --no-restore src/GitInfo.sln
-dotnet test --no-build --verbosity normal --solution src/GitInfo.sln
+dotnet restore src/GitInfo.slnx
+dotnet build --no-restore src/GitInfo.slnx
+dotnet test --no-build --verbosity normal --solution src/GitInfo.slnx
 dotnet run --no-build --project src/GitInfo.Out/GitInfo.Out.csproj
 ```
 
