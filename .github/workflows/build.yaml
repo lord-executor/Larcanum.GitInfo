@@ -1,7 +1,10 @@
-name: Build
+name: .NET Build
 
 on:
-    push: {}
+    push:
+        branches: [ "main" ]
+    pull_request:
+        branches: [ "main" ]
 
 env:
     SOLUTION_FILE: src/GitInfo.sln
