@@ -49,7 +49,47 @@
         <Message Text="GitInfoCheckBinary %(GitInfoDataLine.Identity)" Importance="normal" />
     </Target>
 
-    <Target Name="GitInfoFingerprintFile" DependsOnTargets="GitInfoCheckBinary">
+    <Target Name="GitInfoCheckRepository" DependsOnTargets="GitInfoCheckBinary">
+        <!--
+            Checks that $(ProjectDir) is inside a git repository (or a worktree of one). Without this check, an
+            uninitialized project directory causes the git commands run by the targets below to fail, which
+            surfaces as confusing/unspecific Exec or RunGitCommand errors instead of a clear diagnosis.
+        -->
+        <Exec Command="$(GitInfoGitBin) rev-parse --is-inside-work-tree"
+              EchoOff="true"
+              ConsoleToMsBuild="true"
+              IgnoreExitCode="true"
+              StandardErrorImportance="low"
+              StandardOutputImportance="low"
+              WorkingDirectory="$(ProjectDir)">
+            <Output TaskParameter="ExitCode" PropertyName="_GitRepoCheckExitCode" />
+        </Exec>
+
+        <Error Condition="'$(_GitRepoCheckExitCode)' != '0'"
+               Text="Larcanum.GitInfo requires the project to be inside a git repository, but '$(ProjectDir)' is not one. Run 'git init' in the project (or a parent) directory, or remove the Larcanum.GitInfo package reference." />
+
+        <!--
+            A freshly "git init"-ed repository has no commits, so HEAD is "unborn" and does not resolve to any
+            object yet. The check above still passes in that case (the directory _is_ a work tree), but every
+            HEAD-dependent git command run by the targets below (describe, rev-parse HEAD, diff, etc.)
+            would fail and have its error text written into GitInfo.data.txt as if it were the actual field value.
+            Catch that here with a clear diagnosis instead.
+        -->
+        <Exec Command="$(GitInfoGitBin) rev-parse --verify HEAD"
+              EchoOff="true"
+              ConsoleToMsBuild="true"
+              IgnoreExitCode="true"
+              StandardErrorImportance="low"
+              StandardOutputImportance="low"
+              WorkingDirectory="$(ProjectDir)">
+            <Output TaskParameter="ExitCode" PropertyName="_GitHeadCheckExitCode" />
+        </Exec>
+
+        <Error Condition="'$(_GitHeadCheckExitCode)' != '0'"
+               Text="Larcanum.GitInfo requires at least one commit in the git repository at '$(ProjectDir)', but it has none yet. Create an initial commit before building." />
+    </Target>
+
+    <Target Name="GitInfoFingerprintFile" DependsOnTargets="GitInfoCheckRepository">
         <!--
             This target creates a "GitInfo.fingerprint.txt" with the last output of the following git command
             which serves as a fingerprint to detect when the GitInfo class should be re-generated during the build.
