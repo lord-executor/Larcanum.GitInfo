@@ -273,3 +273,29 @@ jobs:
 ```
 
 Trusted Publishing has to be configured once on nuget.org for the package (`https://www.nuget.org/packages/[package]/manage` → "Trusted Publishing"), linking it to the GitHub repository, workflow file and environment (if any) that is allowed to publish. The workflow only needs the `NUGET_USER` secret (your nuget.org username) under `https://github.com/[user]/[repository]/settings/secrets/actions` and the `id-token: write` permission shown above — no NuGet API key is stored in the repository at all, since `NuGet/login@v1` exchanges GitHub's OIDC token for a short-lived key at publish time.
+
+# Development
+
+## Testing NuGet Package Locally
+
+- Start by checking your local NuGet sources
+  - `dotnet nuget list source`
+- Create a directory to house our that we can use as a local package source
+  - `mkdir "%userprofile%\.nuget.local"`
+- Add this new directory as a source to your `NuGet.Config` file with
+  - `dotnet nuget add source "%userprofile%\.nuget.local" --name "Local Test Packages"`
+- Build the packages that you want to test and define its `$version` (e.g. "1.3.1")
+  - `dotnet pack .\src\GitInfo\GitInfo.csproj -c Release -p:Version="$version"`
+- Copy the created files to the ".nuget.local" directory
+- In the project that uses the library, just update to the latest version by specifying the new local NuGet source and version
+
+> [!Warning]
+> If your local NuGet cache (`%userprofile%\.nuget\packages`) already contains a package with that version, then you MUST delete that old version before you can use the new package.
+
+## Diagnosing Problems with the MSBuild Process
+
+The only way to really get any useful information about issues in the MSBuild pipeline is to run the build with detailed logging and then dig through the resulting logs with a fine tooth comb. Run this to get started.
+
+```
+dotnet build --tl:off -v d
+```
