@@ -39,6 +39,9 @@ If you need more features than what `Larcanum.GitInfo` provides, then you have t
 
 # How to Use It
 
+> [!Tip]
+> If you are experiencing issues with the `GitInfo` class not being "found" by your IDE after installing or updating the package, running a _complete build_ will usually resolve that issue. The source generator depends on files that are generated during the build process with custom MSBuild targets and if those files are not there, the source generator does not know what to generate. The version information is actually extracted during the build and the source generator simply makes that data available as a convenient class.
+
 Assuming that you already have a project with a `git` repository, all you have to do is add the package with
 ```shell
 dotnet add package Larcanum.GitInfo
