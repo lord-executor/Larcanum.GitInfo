@@ -212,6 +212,7 @@ In this example
 - The project uses .NET 9
 - The project file for the library is "src/DemoLib/DemoLib.csproj"
 - The versioning scheme for the tags uses the "v"-prefix, but that is not mandatory and easy to change.
+- NuGet authorization uses [Trusted Publishing](https://aka.ms/nuget/trusted-publishing) (OIDC) instead of a stored API key, the same way this repository's own [`publish.yaml`](.github/workflows/publish.yaml) does it.
 
 The workflow definition is stored in the file ".github/workflows/publish.yml" and would look like this.
 
@@ -229,6 +230,11 @@ jobs:
     build:
         runs-on: ubuntu-latest
 
+        permissions:
+            contents: read
+            # Required so GitHub can issue the OIDC token that NuGet.org exchanges for a short-lived API key
+            id-token: write
+
         steps:
             # Checkout the repository
             - name: Checkout code
@@ -240,15 +246,30 @@ jobs:
               with:
                   dotnet-version: 10.0.x
 
-            # Pack the project with the version that Larcanum.GitInfo extracts from git (this will match the tag)
-            - name: Pack the project
-              run: dotnet pack --configuration Release --output ./artifacts src/DemoLib/DemoLib.csproj
+            # Determine the package version from the pushed tag (strip the leading "v")
+            - name: Determine package version
+              id: version
+              run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
-            # Push the package to NuGet
+            # Pack the project with the version extracted from the tag
+            - name: Pack the project
+              run: >
+                  dotnet pack --configuration Release --output ./artifacts src/DemoLib/DemoLib.csproj
+                  -p:Version=${{ steps.version.outputs.version }}
+
+            # Exchange the GitHub OIDC token for a short-lived NuGet.org API key
+            - name: NuGet login (OIDC -> temporary API key)
+              uses: NuGet/login@v1
+              id: login
+              with:
+                  user: ${{ secrets.NUGET_USER }}
+
+            # Push the package to NuGet using the temporary API key
             - name: Push to NuGet
-              env:
-                  NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-              run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+              run: >
+                  dotnet nuget push ./artifacts/*.nupkg
+                  --api-key ${{ steps.login.outputs.NUGET_API_KEY }}
+                  --source https://api.nuget.org/v3/index.json
 ```
 
-The NuGet authorization is handled with a NuGet access token that is configured as the `NUGET_API_KEY` secret under `https://github.com/[user]/[repository]/settings/secrets/actions`.
+Trusted Publishing has to be configured once on nuget.org for the package (`https://www.nuget.org/packages/[package]/manage` → "Trusted Publishing"), linking it to the GitHub repository, workflow file and environment (if any) that is allowed to publish. The workflow only needs the `NUGET_USER` secret (your nuget.org username) under `https://github.com/[user]/[repository]/settings/secrets/actions` and the `id-token: write` permission shown above — no NuGet API key is stored in the repository at all, since `NuGet/login@v1` exchanges GitHub's OIDC token for a short-lived key at publish time.
